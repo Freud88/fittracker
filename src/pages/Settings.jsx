@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft, LogOut } from 'lucide-react'
 import { supabase, isSupabaseReady } from '../services/supabase'
+import { forceSyncToCloud } from '../utils/syncStorage'
 import { useConfigStore } from '../stores/configStore'
 import { useFoodStore } from '../stores/foodStore'
 import { useWorkoutStore } from '../stores/workoutStore'
@@ -225,7 +226,9 @@ export default function Settings({ session, onNavigate }) {
             </div>
             <button
               onClick={async () => {
-                ['fittracker_config','fittracker_food_log','fittracker_workouts','fittracker_meal_plan','fittracker_measurements']
+                // Prima salva tutto su Supabase, poi pulisci localStorage
+                await forceSyncToCloud()
+                ;['fittracker_config','fittracker_food_log','fittracker_workouts','fittracker_meal_plan','fittracker_measurements']
                   .forEach(k => localStorage.removeItem(k))
                 await supabase.auth.signOut()
                 window.location.reload()

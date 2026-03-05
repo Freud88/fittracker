@@ -15,13 +15,35 @@ async function pushToCloud(key, value) {
   const userId = await getUserId()
   if (!userId) return
   try {
-    await supabase
+    const { error } = await supabase
       .from('user_data')
       .upsert(
         { user_id: userId, key, value, updated_at: new Date().toISOString() },
         { onConflict: 'user_id,key' }
       )
-  } catch { }
+    if (error) console.error('[sync] pushToCloud error:', key, error)
+  } catch (e) {
+    console.error('[sync] pushToCloud exception:', key, e)
+  }
+}
+
+// Forza il salvataggio di tutte le chiavi su Supabase — da chiamare prima del logout
+const STORE_KEYS = [
+  'fittracker_config', 'fittracker_food_log', 'fittracker_workouts',
+  'fittracker_meal_plan', 'fittracker_measurements',
+]
+
+export async function forceSyncToCloud() {
+  await Promise.all(STORE_KEYS.map(async (key) => {
+    const str = localStorage.getItem(key)
+    if (!str) return
+    try {
+      const { _syncedAt, ...value } = JSON.parse(str)
+      await pushToCloud(key, value)
+    } catch (e) {
+      console.error('[sync] forceSyncToCloud error:', key, e)
+    }
+  }))
 }
 
 export async function pullFromCloud(key) {
@@ -35,9 +57,11 @@ export async function pullFromCloud(key) {
       .eq('user_id', userId)
       .eq('key', key)
       .single()
-    if (error || !data) return null
+    if (error) { console.error('[sync] pullFromCloud error:', key, error); return null }
+    if (!data) return null
     return { value: data.value, updatedAt: data.updated_at }
-  } catch {
+  } catch (e) {
+    console.error('[sync] pullFromCloud exception:', key, e)
     return null
   }
 }

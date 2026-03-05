@@ -32,7 +32,7 @@ export default function Plan() {
     addCustomMeal,
   } = useMealPlanStore()
   const { targets } = useConfigStore()
-  const { addMeal } = useFoodStore()
+  const { addMeal, removeMeal, foodLog } = useFoodStore()
 
   function handleMarkEaten(date, category) {
     const meal = plan?.days[date]?.meals[category]
@@ -105,7 +105,15 @@ export default function Plan() {
             plan={plan}
             dailyTarget={targets}
             onMarkEaten={handleMarkEaten}
-            onSkip={skipMeal}
+            onSkip={(date, category) => {
+            // Se il pasto era già stato marcato come mangiato, rimuovilo dal diario
+            const meal = plan?.days[date]?.meals[category]
+            if (meal?.eaten) {
+              const entry = (foodLog[date] || []).find(m => m.name === meal.name && m.category === category)
+              if (entry) removeMeal(date, entry.id)
+            }
+            skipMeal(date, category)
+          }}
             onRecordActual={(d, c, m) => recordActualMeal(d, c, m, targets)}
             onRegenerate={regenerateMeal}
             onRegenerateDay={regenerateDay}
