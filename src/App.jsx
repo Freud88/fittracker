@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseReady } from './services/supabase'
+import { pullFromCloud } from './utils/syncStorage'
 import { useConfigStore } from './stores/configStore'
 import { useFoodStore } from './stores/foodStore'
 import { useWorkoutStore } from './stores/workoutStore'
@@ -35,23 +36,43 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Quando l'utente si autentica, re-idrata gli store dal cloud (Supabase)
+  // Quando l'utente si autentica, sincronizza dal cloud se i dati cloud sono più recenti
   useEffect(() => {
     if (!session) return
-    // Re-fetch da Supabase ora che l'utente è autenticato
-    useConfigStore.persist.rehydrate()
-    useFoodStore.persist.rehydrate()
-    useWorkoutStore.persist.rehydrate()
-    useMealPlanStore.persist.rehydrate()
-    useMeasurementsStore.persist.rehydrate()
 
-    // Auto-popola il nome se non è ancora impostato
-    setTimeout(() => {
+    const STORE_KEYS = [
+      'fittracker_config',
+      'fittracker_food',
+      'fittracker_workout',
+      'fittracker_mealplan',
+      'fittracker_measurements',
+    ]
+    const stores = [useConfigStore, useFoodStore, useWorkoutStore, useMealPlanStore, useMeasurementsStore]
+
+    ;(async () => {
+      let anyUpdated = false
+      for (const key of STORE_KEYS) {
+        const cloud = await pullFromCloud(key)
+        if (!cloud) continue
+        const localRaw = localStorage.getItem(key)
+        const localTs = localRaw ? (JSON.parse(localRaw)?._syncedAt ?? 0) : 0
+        const cloudTs = new Date(cloud.updatedAt).getTime()
+        if (cloudTs > localTs) {
+          localStorage.setItem(key, JSON.stringify({ ...cloud.value, _syncedAt: cloudTs }))
+          anyUpdated = true
+        }
+      }
+      // Rehydrata solo se almeno uno store è stato aggiornato dal cloud
+      if (anyUpdated) {
+        stores.forEach((s) => s.persist.rehydrate())
+      }
+
+      // Auto-popola il nome se non è ancora impostato
       const { userInfo, updateUserInfo } = useConfigStore.getState()
       if (!userInfo.name && session.user.user_metadata?.name) {
         updateUserInfo({ name: session.user.user_metadata.name })
       }
-    }, 500) // piccolo delay per lasciare che la re-idratazione completi
+    })()
   }, [session?.user?.id])
 
   if (session === undefined) {

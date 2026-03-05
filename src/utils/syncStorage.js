@@ -1,23 +1,32 @@
 /**
  * Zustand custom storage adapter.
- * Scrive su localStorage (immediato, offline-first) e sincronizza
- * in background su Supabase (cloud, multi-device, per-utente).
+ * - getItem/setItem usano localStorage in modo SINCRONO (persistenza immediata)
+ * - Il sync con Supabase avviene separatamente tramite pullFromCloud/pushToCloud
  */
 import { supabase, isSupabaseReady } from '../services/supabase'
 
-// --- Helper per l'utente corrente ---
-
-async function getCurrentUserId() {
+async function getUserId() {
   if (!isSupabaseReady()) return null
   const { data: { session } } = await supabase.auth.getSession()
   return session?.user?.id ?? null
 }
 
-// --- Supabase helpers ---
+async function pushToCloud(key, value) {
+  const userId = await getUserId()
+  if (!userId) return
+  try {
+    await supabase
+      .from('user_data')
+      .upsert(
+        { user_id: userId, key, value, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,key' }
+      )
+  } catch { }
+}
 
-async function fetchFromCloud(key) {
+export async function pullFromCloud(key) {
   if (!isSupabaseReady()) return null
-  const userId = await getCurrentUserId()
+  const userId = await getUserId()
   if (!userId) return null
   try {
     const { data, error } = await supabase
@@ -33,73 +42,20 @@ async function fetchFromCloud(key) {
   }
 }
 
-async function pushToCloud(key, value) {
-  if (!isSupabaseReady()) return
-  const userId = await getCurrentUserId()
-  if (!userId) return
-  try {
-    await supabase
-      .from('user_data')
-      .upsert(
-        { user_id: userId, key, value, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id,key' }
-      )
-  } catch { /* silently fail — non bloccare l'app */ }
-}
-
-// --- Storage adapter compatibile con Zustand persist ---
-
+// Adapter sincrono per Zustand persist — localStorage è la fonte di verità locale
 export const syncStorage = {
-  getItem: async (key) => {
-    const local = localStorage.getItem(key)
-
-    if (!isSupabaseReady()) return local
-
-    try {
-      const cloud = await fetchFromCloud(key)
-      if (!cloud) return local
-
-      if (local) {
-        try {
-          const localParsed = JSON.parse(local)
-          const localTs = localParsed?._syncedAt ?? 0
-          const cloudTs  = new Date(cloud.updatedAt).getTime()
-
-          if (cloudTs > localTs) {
-            const merged = JSON.stringify({ ...cloud.value, _syncedAt: cloudTs })
-            localStorage.setItem(key, merged)
-            return merged
-          }
-        } catch { /* json malformato, usa cloud */ }
-      }
-
-      const merged = JSON.stringify({ ...cloud.value, _syncedAt: new Date(cloud.updatedAt).getTime() })
-      localStorage.setItem(key, merged)
-      return merged
-    } catch {
-      return local
-    }
-  },
+  getItem: (key) => localStorage.getItem(key),
 
   setItem: (key, value) => {
-    const now = Date.now()
     let parsed
     try { parsed = JSON.parse(value) } catch { parsed = value }
-
-    const withTs = JSON.stringify({ ...parsed, _syncedAt: now })
-    localStorage.setItem(key, withTs)
-
-    const { _syncedAt, ...forCloud } = parsed ?? {}
-    pushToCloud(key, forCloud)
+    // Salva in localStorage con timestamp per il confronto cloud
+    localStorage.setItem(key, JSON.stringify({ ...parsed, _syncedAt: Date.now() }))
+    // Push su Supabase in background (fire & forget)
+    pushToCloud(key, parsed)
   },
 
-  removeItem: async (key) => {
+  removeItem: (key) => {
     localStorage.removeItem(key)
-    if (isSupabaseReady()) {
-      const userId = await getCurrentUserId()
-      if (userId) {
-        supabase.from('user_data').delete().eq('user_id', userId).eq('key', key).then(() => {})
-      }
-    }
   },
 }
