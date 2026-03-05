@@ -41,9 +41,13 @@ export function regenerateDay(plan, date, mealLibrary, bannedIds, eatenCategorie
   const usedThisWeek = countWeeklyUsage(plan)
   const updatedMeals = { ...plan.days[date].meals }
 
-  for (const cat of ['breakfast', 'lunch', 'snack', 'dinner']) {
-    if (eatenCategories.includes(cat)) continue
-    const targetKcal = target.calories * MEAL_TARGETS[cat]
+  const toRegen = ['breakfast', 'lunch', 'snack', 'dinner'].filter(cat => !eatenCategories.includes(cat))
+  const eatenCalories = eatenCategories.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
+  const remainingCal  = Math.max(0, target.calories - eatenCalories)
+  const regenPropSum  = toRegen.reduce((sum, cat) => sum + MEAL_TARGETS[cat], 0)
+
+  for (const cat of toRegen) {
+    const targetKcal = regenPropSum > 0 ? remainingCal * (MEAL_TARGETS[cat] / regenPropSum) : target.calories * MEAL_TARGETS[cat]
     const meal = pickMeal(available, cat, targetKcal, usedThisWeek)
     if (meal) updatedMeals[cat] = { ...meal, mealId: meal.id }
   }
@@ -58,8 +62,16 @@ export function regenerateMeal(plan, date, category, mealLibrary, bannedIds) {
   const available    = mealLibrary.filter((m) => !bannedIds.includes(m.id))
   const target       = plan.adjustedTargets[date]
   const usedThisWeek = countWeeklyUsage(plan)
-  const targetKcal   = target.calories * MEAL_TARGETS[category]
   const currentMealId = plan.days[date]?.meals[category]?.id
+
+  // Account for already eaten meals (excluding the one being regenerated)
+  const allCats = ['breakfast', 'lunch', 'snack', 'dinner']
+  const eatenCats = allCats.filter(cat => cat !== category && plan.days[date]?.meals[cat]?.eaten)
+  const eatenCalories = eatenCats.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
+  const remainingCal  = Math.max(0, target.calories - eatenCalories)
+  const uneatenCats   = allCats.filter(cat => !eatenCats.includes(cat))
+  const propSum       = uneatenCats.reduce((sum, cat) => sum + MEAL_TARGETS[cat], 0)
+  const targetKcal    = propSum > 0 ? remainingCal * (MEAL_TARGETS[category] / propSum) : target.calories * MEAL_TARGETS[category]
 
   // Exclude current meal from pool
   const pool = available.filter((m) => m.id !== currentMealId)
