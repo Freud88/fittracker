@@ -57,7 +57,10 @@ export async function pullFromCloud(key) {
       .eq('user_id', userId)
       .eq('key', key)
       .single()
-    if (error) { console.error('[sync] pullFromCloud error:', key, error); return null }
+    if (error) {
+      if (error.code !== 'PGRST116') console.error('[sync] pullFromCloud error:', key, error)
+      return null
+    }
     if (!data) return null
     return { value: data.value, updatedAt: data.updated_at }
   } catch (e) {
