@@ -87,11 +87,12 @@ export default function Plan() {
             onMarkEaten={markMealEaten}
             onRecordActual={(d, c, m) => recordActualMeal(d, c, m, targets)}
             onRegenerate={regenerateMeal}
+            onRegenerateDay={regenerateDay}
             onBan={banMeal}
           />
 
           {/* Legend */}
-          <div className="flex gap-4 mt-4 justify-center flex-wrap">
+          <div className="flex gap-4 mt-5 justify-center flex-wrap">
             {[
               { color: 'bg-accent-green', label: 'Mangiato' },
               { color: 'bg-accent-gold', label: 'Modificato' },
@@ -103,27 +104,6 @@ export default function Plan() {
                 <span className="text-text-dim text-[10px]">{label}</span>
               </div>
             ))}
-          </div>
-
-          {/* Rigenera singolo giorno button */}
-          <div className="mt-4">
-            <p className="text-text-muted text-xs uppercase tracking-wider mb-2">Rigenera giorno</p>
-            <div className="flex gap-2 flex-wrap">
-              {['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map((label, i) => {
-                const days = Object.keys(plan.days).sort()
-                const date = days[i]
-                if (!date) return null
-                return (
-                  <button
-                    key={date}
-                    onClick={() => regenerateDay(date)}
-                    className="px-3 py-1.5 rounded-lg bg-surface2 text-text-muted text-xs active:bg-border"
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
           </div>
         </div>
       )}
