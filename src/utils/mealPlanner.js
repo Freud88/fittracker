@@ -130,10 +130,20 @@ function pickMeal(available, category, targetKcal, usedThisWeek) {
   const underLimit = byCat.filter((m) => (usedThisWeek[m.id] ?? 0) < 2)
   const pool = underLimit.length > 0 ? underLimit : byCat
 
-  // Ordina per distanza dalle calorie target, con rumore casuale per varietà
-  return pool
-    .map((m) => ({ m, score: Math.abs(m.calories - targetKcal) + Math.random() * 80 }))
+  // Sceglie il pasto con varietà casuale
+  const picked = pool
+    .map((m) => ({ m, score: Math.random() }))
     .sort((a, b) => a.score - b.score)[0].m
+
+  // Scala le porzioni al target calorico dell'utente
+  const scale = targetKcal / picked.calories
+  return {
+    ...picked,
+    calories: Math.round(targetKcal),
+    protein:  Math.round(picked.protein  * scale * 10) / 10,
+    carbs:    Math.round(picked.carbs    * scale * 10) / 10,
+    fat:      Math.round(picked.fat      * scale * 10) / 10,
+  }
 }
 
 function compensateInDay(plan, date, changedCategory, plannedMeal) {
