@@ -15,7 +15,7 @@ export default function Settings({ session, onNavigate }) {
   const { targets, userInfo, updateTargets, updateUserInfo } = useConfigStore()
   const { foodLog } = useFoodStore()
   const { workouts } = useWorkoutStore()
-  const { mealLibrary, bannedMeals, unbanMeal, removeCustomMeal, addCustomMeal } = useMealPlanStore()
+  const { mealLibrary, bannedMeals, plan, generatePlan, unbanMeal, removeCustomMeal, addCustomMeal } = useMealPlanStore()
   const [localTargets, setLocalTargets] = useState({ ...targets })
   const [localUser, setLocalUser] = useState({ ...userInfo })
   const [saved, setSaved] = useState(false)
@@ -27,6 +27,7 @@ export default function Settings({ session, onNavigate }) {
   function handleSave() {
     updateTargets(localTargets)
     updateUserInfo(localUser)
+    if (plan) generatePlan(localTargets)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -219,7 +220,12 @@ export default function Settings({ session, onNavigate }) {
               </div>
             </div>
             <button
-              onClick={() => supabase.auth.signOut()}
+              onClick={async () => {
+                ['fittracker_config','fittracker_food','fittracker_workout','fittracker_mealplan']
+                  .forEach(k => localStorage.removeItem(k))
+                await supabase.auth.signOut()
+                window.location.reload()
+              }}
               className="w-full flex items-center gap-3 bg-surface2 rounded-xl px-4 py-3 text-accent-red text-sm"
             >
               <LogOut size={18} />

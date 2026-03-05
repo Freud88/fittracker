@@ -17,7 +17,7 @@ export default function Header({ currentPage, userName, onNavigate }) {
         <div>
           <p className="text-text-muted text-sm capitalize">{dateStr}</p>
           <h1 className="font-title text-3xl text-text leading-tight">
-            Ciao, {userName || 'Luca'}
+            Ciao, {userName || 'Utente'}
           </h1>
         </div>
         <button

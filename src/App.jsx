@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseReady } from './services/supabase'
+import { useConfigStore } from './stores/configStore'
 import BottomNav from './components/layout/BottomNav'
 import Today from './pages/Today'
 import Food from './pages/Food'
@@ -15,7 +16,7 @@ export default function App() {
 
   useEffect(() => {
     if (!isSupabaseReady()) {
-      setSession(null) // Supabase non configurato, accesso libero
+      setSession(null)
       return
     }
 
@@ -30,7 +31,15 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Caricamento iniziale
+  // Auto-popola il nome dal profilo auth al primo login
+  useEffect(() => {
+    if (!session) return
+    const { userInfo, updateUserInfo } = useConfigStore.getState()
+    if (!userInfo.name && session.user.user_metadata?.name) {
+      updateUserInfo({ name: session.user.user_metadata.name })
+    }
+  }, [session])
+
   if (session === undefined) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -39,7 +48,6 @@ export default function App() {
     )
   }
 
-  // Non loggato
   if (!session) {
     return <Auth />
   }

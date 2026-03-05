@@ -10,10 +10,10 @@ const defaultConfig = {
     fat: 80,
   },
   userInfo: {
-    weight: 80.8,
-    height: 186,
-    age: 37,
-    name: 'Luca',
+    weight: 70,
+    height: 170,
+    age: 25,
+    name: '',
   },
 }
 
