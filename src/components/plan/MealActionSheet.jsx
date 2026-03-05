@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Check, Edit3, Shuffle, Ban } from 'lucide-react'
 import FoodSearch from '../food/FoodSearch'
 import { calcMacroFromFood } from '../../utils/macroCalc'
+import { formatIngredient } from '../../utils/formatIngredient'
 
 const catLabels = {
   breakfast: 'Colazione',
@@ -62,7 +63,7 @@ export default function MealActionSheet({
                   <div className="mt-2 space-y-0.5">
                     {meal.ingredients.map((ing, i) => (
                       <p key={i} className="text-text-dim text-xs">
-                        · {ing.name} <span className="text-text-muted">{ing.grams}g</span>
+                        · {formatIngredient(ing)}
                       </p>
                     ))}
                   </div>

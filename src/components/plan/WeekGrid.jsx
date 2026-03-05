@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MealActionSheet from './MealActionSheet'
 import { getToday } from '../../utils/dateUtils'
 import { Check, Edit3, RefreshCw } from 'lucide-react'
+import { formatIngredient } from '../../utils/formatIngredient'
 
 const CATEGORIES = ['breakfast', 'lunch', 'snack', 'dinner']
 const DAY_LABELS  = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
@@ -131,7 +132,7 @@ export default function WeekGrid({
               {/* ingredients */}
               {meal?.ingredients?.length > 0 && (
                 <p className="text-text-dim text-[11px] mt-2 leading-relaxed">
-                  {meal.ingredients.map((ing) => `${ing.name} ${ing.grams}g`).join(' · ')}
+                  {meal.ingredients.map((ing) => formatIngredient(ing)).join(' · ')}
                 </p>
               )}
             </button>
