@@ -1,5 +1,5 @@
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY
-const ENDPOINT = 'https://api.openai.com/v1/chat/completions'
+const API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
 
 const PROMPT = `Analizza questo pasto e fornisci una stima nutrizionale.
 Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo né backtick, in questo formato:
@@ -33,7 +33,7 @@ Regole:
 - Se non riesci a identificare il cibo: dishes:[] e spiega in notes`
 
 export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg') {
-  if (!API_KEY) throw new Error('Chiave API OpenAI non configurata (VITE_OPENAI_API_KEY)')
+  if (!API_KEY) throw new Error('Chiave API Groq non configurata (VITE_GROQ_API_KEY)')
 
   const response = await fetch(ENDPOINT, {
     method: 'POST',
@@ -42,7 +42,7 @@ export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg'
       'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       max_tokens: 1024,
       temperature: 0.2,
       messages: [
@@ -59,7 +59,7 @@ export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg'
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `OpenAI API error: ${response.status}`)
+    throw new Error(err?.error?.message ?? `Groq API error: ${response.status}`)
   }
 
   const data = await response.json()
