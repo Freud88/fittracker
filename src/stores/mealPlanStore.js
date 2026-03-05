@@ -23,19 +23,19 @@ export const useMealPlanStore = create(
         set({ plan: generateWeekPlan(dailyTarget, mealLibrary, bannedMeals) })
       },
 
-      regenerateDay: (date) => {
+      regenerateDay: (date, alreadyEatenCalories = null) => {
         const { plan, mealLibrary, bannedMeals } = get()
         if (!plan) return
         const eatenCats = Object.entries(plan.days[date]?.meals ?? {})
           .filter(([, m]) => m?.eaten)
           .map(([cat]) => cat)
-        set({ plan: regenDay(plan, date, mealLibrary, bannedMeals, eatenCats) })
+        set({ plan: regenDay(plan, date, mealLibrary, bannedMeals, eatenCats, alreadyEatenCalories) })
       },
 
-      regenerateMeal: (date, category) => {
+      regenerateMeal: (date, category, alreadyEatenCalories = null) => {
         const { plan, mealLibrary, bannedMeals } = get()
         if (!plan) return
-        set({ plan: regenMeal(plan, date, category, mealLibrary, bannedMeals) })
+        set({ plan: regenMeal(plan, date, category, mealLibrary, bannedMeals, alreadyEatenCalories) })
       },
 
       markMealEaten: (date, category) => {

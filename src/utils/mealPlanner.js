@@ -35,14 +35,14 @@ export function generateWeekPlan(dailyTarget, mealLibrary, bannedIds = []) {
   }
 }
 
-export function regenerateDay(plan, date, mealLibrary, bannedIds, eatenCategories = []) {
+export function regenerateDay(plan, date, mealLibrary, bannedIds, eatenCategories = [], alreadyEatenCalories = null) {
   const available    = mealLibrary.filter((m) => !bannedIds.includes(m.id))
   const target       = plan.adjustedTargets[date]
   const usedThisWeek = countWeeklyUsage(plan)
   const updatedMeals = { ...plan.days[date].meals }
 
   const toRegen = ['breakfast', 'lunch', 'snack', 'dinner'].filter(cat => !eatenCategories.includes(cat))
-  const eatenCalories = eatenCategories.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
+  const eatenCalories = alreadyEatenCalories ?? eatenCategories.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
   const remainingCal  = Math.max(0, target.calories - eatenCalories)
   const regenPropSum  = toRegen.reduce((sum, cat) => sum + MEAL_TARGETS[cat], 0)
 
@@ -58,7 +58,7 @@ export function regenerateDay(plan, date, mealLibrary, bannedIds, eatenCategorie
   }
 }
 
-export function regenerateMeal(plan, date, category, mealLibrary, bannedIds) {
+export function regenerateMeal(plan, date, category, mealLibrary, bannedIds, alreadyEatenCalories = null) {
   const available    = mealLibrary.filter((m) => !bannedIds.includes(m.id))
   const target       = plan.adjustedTargets[date]
   const usedThisWeek = countWeeklyUsage(plan)
@@ -67,7 +67,7 @@ export function regenerateMeal(plan, date, category, mealLibrary, bannedIds) {
   // Account for already eaten meals (excluding the one being regenerated)
   const allCats = ['breakfast', 'lunch', 'snack', 'dinner']
   const eatenCats = allCats.filter(cat => cat !== category && plan.days[date]?.meals[cat]?.eaten)
-  const eatenCalories = eatenCats.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
+  const eatenCalories = alreadyEatenCalories ?? eatenCats.reduce((sum, cat) => sum + (plan.days[date]?.meals[cat]?.calories ?? 0), 0)
   const remainingCal  = Math.max(0, target.calories - eatenCalories)
   const uneatenCats   = allCats.filter(cat => !eatenCats.includes(cat))
   const propSum       = uneatenCats.reduce((sum, cat) => sum + MEAL_TARGETS[cat], 0)

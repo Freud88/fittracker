@@ -34,6 +34,10 @@ export default function Plan() {
   const { targets } = useConfigStore()
   const { addMeal, removeMeal, foodLog } = useFoodStore()
 
+  function getLoggedCalories(date) {
+    return (foodLog[date] ?? []).reduce((sum, m) => sum + (m.calories ?? 0), 0)
+  }
+
   function handleMarkEaten(date, category) {
     const meal = plan?.days[date]?.meals[category]
     if (meal) {
@@ -115,8 +119,8 @@ export default function Plan() {
             skipMeal(date, category)
           }}
             onRecordActual={(d, c, m) => recordActualMeal(d, c, m, targets)}
-            onRegenerate={regenerateMeal}
-            onRegenerateDay={regenerateDay}
+            onRegenerate={(date, category) => regenerateMeal(date, category, getLoggedCalories(date))}
+            onRegenerateDay={(date) => regenerateDay(date, getLoggedCalories(date))}
             onBan={banMeal}
           />
 
