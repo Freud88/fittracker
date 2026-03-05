@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, CheckCircle } from 'lucide-react'
 import { useWorkoutStore } from '../stores/workoutStore'
 import { getToday } from '../utils/dateUtils'
 import Header from '../components/layout/Header'
@@ -76,6 +76,20 @@ export default function Workout() {
                   className="bg-accent-blue text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 mx-auto active:scale-95 transition-transform"
                 >
                   <Plus size={18} /> Inizia allenamento
+                </button>
+              </div>
+            ) : todayWorkout.completed ? (
+              <div className="text-center py-10">
+                <CheckCircle size={48} className="text-accent-green mx-auto mb-3" />
+                <p className="text-text font-semibold mb-1">Sessione completata!</p>
+                <p className="text-text-muted text-sm mb-6">
+                  {todayWorkout.exercises.length} esercizi registrati
+                </p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="bg-accent-blue text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 mx-auto active:scale-95 transition-transform"
+                >
+                  <Plus size={18} /> Nuova sessione
                 </button>
               </div>
             ) : (
