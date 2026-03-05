@@ -9,8 +9,8 @@ import { supabase, isSupabaseReady } from '../services/supabase'
 
 async function getCurrentUserId() {
   if (!isSupabaseReady()) return null
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id ?? null
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user?.id ?? null
 }
 
 // --- Supabase helpers ---

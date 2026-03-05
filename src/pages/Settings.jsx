@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft, LogOut } from 'lucide-react'
 import { supabase, isSupabaseReady } from '../services/supabase'
 import { useConfigStore } from '../stores/configStore'
@@ -18,6 +18,10 @@ export default function Settings({ session, onNavigate }) {
   const { mealLibrary, bannedMeals, plan, generatePlan, unbanMeal, removeCustomMeal, addCustomMeal } = useMealPlanStore()
   const [localTargets, setLocalTargets] = useState({ ...targets })
   const [localUser, setLocalUser] = useState({ ...userInfo })
+
+  // Sync local state when store rehydrates from cloud
+  useEffect(() => { setLocalTargets({ ...targets }) }, [JSON.stringify(targets)])
+  useEffect(() => { setLocalUser({ ...userInfo }) }, [JSON.stringify(userInfo)])
   const [saved, setSaved] = useState(false)
   const [showAddMeal, setShowAddMeal] = useState(false)
 
@@ -221,7 +225,7 @@ export default function Settings({ session, onNavigate }) {
             </div>
             <button
               onClick={async () => {
-                ['fittracker_config','fittracker_food','fittracker_workout','fittracker_mealplan']
+                ['fittracker_config','fittracker_food','fittracker_workout','fittracker_mealplan','fittracker_measurements']
                   .forEach(k => localStorage.removeItem(k))
                 await supabase.auth.signOut()
                 window.location.reload()
