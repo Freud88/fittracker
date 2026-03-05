@@ -143,6 +143,10 @@ function pickMeal(available, category, targetKcal, usedThisWeek) {
     protein:  Math.round(picked.protein  * scale * 10) / 10,
     carbs:    Math.round(picked.carbs    * scale * 10) / 10,
     fat:      Math.round(picked.fat      * scale * 10) / 10,
+    ingredients: (picked.ingredients ?? []).map((ing) => ({
+      ...ing,
+      grams: Math.round(ing.grams * scale),
+    })),
   }
 }
 

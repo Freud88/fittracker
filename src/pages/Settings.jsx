@@ -11,7 +11,7 @@ import AddCustomMealModal from '../components/plan/AddCustomMealModal'
 
 const catLabels = { breakfast: 'Colazione', lunch: 'Pranzo', snack: 'Spuntino', dinner: 'Cena' }
 
-export default function Settings({ session }) {
+export default function Settings({ session, onNavigate }) {
   const { targets, userInfo, updateTargets, updateUserInfo } = useConfigStore()
   const { foodLog } = useFoodStore()
   const { workouts } = useWorkoutStore()
@@ -72,7 +72,7 @@ export default function Settings({ session }) {
 
   return (
     <div>
-      <Header currentPage="settings" />
+      <Header currentPage="settings" onNavigate={onNavigate} />
       <div className="px-4 space-y-6 pb-8">
 
         {/* User info */}

@@ -58,6 +58,15 @@ export default function MealActionSheet({
                 <p className="text-text-muted text-xs mt-0.5">
                   {meal?.calories} kcal · P{meal?.protein}g · C{meal?.carbs}g · G{meal?.fat}g
                 </p>
+                {meal?.ingredients?.length > 0 && (
+                  <div className="mt-2 space-y-0.5">
+                    {meal.ingredients.map((ing, i) => (
+                      <p key={i} className="text-text-dim text-xs">
+                        · {ing.name} <span className="text-text-muted">{ing.grams}g</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
               <button onClick={onClose} className="text-text-muted p-1">
                 <X size={20} />

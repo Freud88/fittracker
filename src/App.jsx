@@ -50,7 +50,7 @@ export default function App() {
     plan:     <Plan />,
     workout:  <Workout />,
     stats:    <Stats />,
-    settings: <Settings session={session} />,
+    settings: <Settings session={session} onNavigate={setCurrentPage} />,
   }
 
   const showBottomNav = currentPage !== 'settings'

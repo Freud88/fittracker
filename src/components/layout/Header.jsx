@@ -1,4 +1,4 @@
-import { Settings } from 'lucide-react'
+import { Settings, ChevronLeft } from 'lucide-react'
 import { formatDate, getToday } from '../../utils/dateUtils'
 
 const pageTitles = {
@@ -26,6 +26,20 @@ export default function Header({ currentPage, userName, onNavigate }) {
         >
           <Settings size={20} />
         </button>
+      </header>
+    )
+  }
+
+  if (currentPage === 'settings') {
+    return (
+      <header className="px-4 pt-5 pb-3 flex items-center gap-2">
+        <button
+          onClick={() => onNavigate?.('today')}
+          className="p-1 -ml-1 text-text-muted active:text-text"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h1 className="font-title text-3xl text-text">{pageTitles.settings}</h1>
       </header>
     )
   }
