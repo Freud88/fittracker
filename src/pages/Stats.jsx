@@ -1,10 +1,26 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Plus, TrendingUp, TrendingDown, Minus, Trash2 } from 'lucide-react'
 import { useFoodStore } from '../stores/foodStore'
 import { useWorkoutStore } from '../stores/workoutStore'
 import { useConfigStore } from '../stores/configStore'
 import { useMeasurementsStore } from '../stores/measurementsStore'
-import { getLast7Days, getLast30Days, formatDateShort } from '../utils/dateUtils'
+import { getLast30Days, formatDateShort } from '../utils/dateUtils'
+
+const PERIODS = [
+  { id: '7d',   label: 'Settimana', days: 7   },
+  { id: '30d',  label: 'Mese',      days: 30  },
+  { id: '365d', label: 'Anno',      days: 365 },
+]
+
+function getLastNDays(n) {
+  const days = []
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    days.push(d.toISOString().split('T')[0])
+  }
+  return days
+}
 import Header from '../components/layout/Header'
 import CalendarView from '../components/stats/CalendarView'
 import ProgressChart from '../components/stats/ProgressChart'
@@ -31,6 +47,7 @@ export default function Stats() {
   const [calMonth, setCalMonth] = useState(now.getMonth())
   const [showAddMeas, setShowAddMeas] = useState(false)
   const [measTab, setMeasTab] = useState('peso')
+  const [period, setPeriod] = useState('7d')
 
   const { foodLog }  = useFoodStore()
   const { workouts } = useWorkoutStore()
@@ -45,11 +62,43 @@ export default function Stats() {
     )
   }
 
-  const last7  = getLast7Days().map((date) => ({ date, ...getTotalsForDate(date) }))
+  const periodDays = PERIODS.find(p => p.id === period).days
+  const allDays    = useMemo(() => getLastNDays(periodDays), [periodDays])
+
+  // Chart data: daily for 7/30d, monthly aggregated for 365d
+  const chartData = useMemo(() => {
+    if (period !== '365d') {
+      return allDays.map((date) => ({ date: date.slice(5), ...getTotalsForDate(date) }))
+    }
+    // Group by month
+    const byMonth = {}
+    allDays.forEach((date) => {
+      const key = date.slice(0, 7)
+      if (!byMonth[key]) byMonth[key] = []
+      byMonth[key].push(date)
+    })
+    return Object.entries(byMonth).map(([key, days]) => {
+      const tot = days.reduce((acc, d) => {
+        const t = getTotalsForDate(d)
+        return { calories: acc.calories+t.calories, protein: acc.protein+t.protein, carbs: acc.carbs+t.carbs, fat: acc.fat+t.fat }
+      }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+      return { date: key.slice(5), ...tot }
+    })
+  }, [period, allDays, foodLog])
+
+  // Period totals
+  const periodTotals = useMemo(() => allDays.reduce((acc, d) => {
+    const t = getTotalsForDate(d)
+    return { calories: acc.calories+t.calories, protein: acc.protein+t.protein, carbs: acc.carbs+t.carbs, fat: acc.fat+t.fat }
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 }), [allDays, foodLog])
+
+  const avgCal  = periodTotals.calories / periodDays
+  const avgProt = periodTotals.protein  / periodDays
+  const targetCal = targets.calories * periodDays
+  const deficit = targetCal - periodTotals.calories // positivo = deficit, negativo = surplus
+
   const last30 = getLast30Days()
   const workoutDays30 = last30.filter((d) => !!workouts[d]).length
-  const avgCal7  = last7.reduce((a, d) => a + d.calories, 0) / 7
-  const avgProt7 = last7.reduce((a, d) => a + d.protein,  0) / 7
 
   const monthNames = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
   function prevMonth() { if (calMonth === 0) { setCalYear(y=>y-1); setCalMonth(11) } else setCalMonth(m=>m-1) }
@@ -76,12 +125,22 @@ export default function Stats() {
       <Header currentPage="stats" />
       <div className="px-4 space-y-4 pb-6">
 
+        {/* Period selector */}
+        <div className="flex gap-1.5">
+          {PERIODS.map(({ id, label }) => (
+            <button key={id} onClick={() => setPeriod(id)}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${period === id ? 'bg-accent-blue text-white' : 'bg-surface text-text-muted'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Media kcal (7gg)', value: Math.round(avgCal7),       color: '#F4522A' },
-            { label: 'Media prot (7gg)', value: `${Math.round(avgProt7)}g`, color: '#3498DB' },
-            { label: 'Sessioni (30gg)',  value: workoutDays30,              color: '#2ECC71' },
+            { label: `Media kcal/giorno`, value: Math.round(avgCal),       color: '#F4522A' },
+            { label: `Media prot/giorno`, value: `${Math.round(avgProt)}g`, color: '#3498DB' },
+            { label: 'Sessioni (30gg)',   value: workoutDays30,             color: '#2ECC71' },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-surface rounded-xl p-3 text-center">
               <p className="text-2xl font-bold" style={{ color }}>{value}</p>
@@ -90,10 +149,36 @@ export default function Stats() {
           ))}
         </div>
 
-        <ProgressChart data={last7} title="Calorie ultimi 7 giorni"
+        {/* Deficit / Surplus card */}
+        <div className={`rounded-xl p-4 border ${deficit >= 0 ? 'bg-accent-green/10 border-accent-green/30' : 'bg-accent-red/10 border-accent-red/30'}`}>
+          <p className="text-text-muted text-xs uppercase tracking-wider mb-3">
+            Bilancio calorico — {PERIODS.find(p => p.id === period)?.label}
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-text-dim text-[10px] mb-0.5">Target</p>
+              <p className="text-text font-bold text-lg">{Math.round(targetCal)}</p>
+              <p className="text-text-dim text-[10px]">kcal totali</p>
+            </div>
+            <div>
+              <p className="text-text-dim text-[10px] mb-0.5">Consumato</p>
+              <p className="text-text font-bold text-lg">{Math.round(periodTotals.calories)}</p>
+              <p className="text-text-dim text-[10px]">kcal totali</p>
+            </div>
+            <div>
+              <p className="text-text-dim text-[10px] mb-0.5">{deficit >= 0 ? 'Deficit' : 'Surplus'}</p>
+              <p className={`font-bold text-lg ${deficit >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                {deficit >= 0 ? '' : '+'}{Math.round(Math.abs(deficit))}
+              </p>
+              <p className="text-text-dim text-[10px]">kcal · {deficit >= 0 ? '−' : '+'}{Math.round(Math.abs(deficit / periodDays))}/gg</p>
+            </div>
+          </div>
+        </div>
+
+        <ProgressChart data={chartData} title={`Calorie — ${PERIODS.find(p=>p.id===period)?.label.toLowerCase()}`}
           lines={[{ key: 'calories', name: 'Calorie', color: '#F4522A' }]} />
 
-        <ProgressChart data={last7} title="Macronutrienti ultimi 7 giorni"
+        <ProgressChart data={chartData} title={`Macronutrienti — ${PERIODS.find(p=>p.id===period)?.label.toLowerCase()}`}
           lines={[
             { key: 'protein', name: 'Proteine',    color: '#3498DB' },
             { key: 'carbs',   name: 'Carboidrati', color: '#F9A825' },
