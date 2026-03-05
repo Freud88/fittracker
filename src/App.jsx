@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseReady } from './services/supabase'
 import { useConfigStore } from './stores/configStore'
+import { useFoodStore } from './stores/foodStore'
+import { useWorkoutStore } from './stores/workoutStore'
+import { useMealPlanStore } from './stores/mealPlanStore'
 import BottomNav from './components/layout/BottomNav'
 import Today from './pages/Today'
 import Food from './pages/Food'
@@ -31,14 +34,23 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Auto-popola il nome dal profilo auth al primo login
+  // Quando l'utente si autentica, re-idrata gli store dal cloud (Supabase)
   useEffect(() => {
     if (!session) return
-    const { userInfo, updateUserInfo } = useConfigStore.getState()
-    if (!userInfo.name && session.user.user_metadata?.name) {
-      updateUserInfo({ name: session.user.user_metadata.name })
-    }
-  }, [session])
+    // Re-fetch da Supabase ora che l'utente è autenticato
+    useConfigStore.persist.rehydrate()
+    useFoodStore.persist.rehydrate()
+    useWorkoutStore.persist.rehydrate()
+    useMealPlanStore.persist.rehydrate()
+
+    // Auto-popola il nome se non è ancora impostato
+    setTimeout(() => {
+      const { userInfo, updateUserInfo } = useConfigStore.getState()
+      if (!userInfo.name && session.user.user_metadata?.name) {
+        updateUserInfo({ name: session.user.user_metadata.name })
+      }
+    }, 500) // piccolo delay per lasciare che la re-idratazione completi
+  }, [session?.user?.id])
 
   if (session === undefined) {
     return (
