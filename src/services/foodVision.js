@@ -1,5 +1,5 @@
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${API_KEY}`
+const API_KEY = import.meta.env.VITE_OPENAI_API_KEY
+const ENDPOINT = 'https://api.openai.com/v1/chat/completions'
 
 const PROMPT = `Analizza questo pasto e fornisci una stima nutrizionale.
 Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo né backtick, in questo formato:
@@ -33,34 +33,37 @@ Regole:
 - Se non riesci a identificare il cibo: dishes:[] e spiega in notes`
 
 export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg') {
-  if (!API_KEY) throw new Error('Chiave API Gemini non configurata (VITE_GEMINI_API_KEY)')
+  if (!API_KEY) throw new Error('Chiave API OpenAI non configurata (VITE_OPENAI_API_KEY)')
 
   const response = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`,
+    },
     body: JSON.stringify({
-      contents: [
+      model: 'gpt-4o-mini',
+      max_tokens: 1024,
+      temperature: 0.2,
+      messages: [
         {
-          parts: [
-            { inline_data: { mime_type: mimeType, data: base64Image } },
-            { text: PROMPT },
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}`, detail: 'low' } },
+            { type: 'text', text: PROMPT },
           ],
         },
       ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1024,
-      },
     }),
   })
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `Gemini API error: ${response.status}`)
+    throw new Error(err?.error?.message ?? `OpenAI API error: ${response.status}`)
   }
 
   const data = await response.json()
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+  const text = data.choices?.[0]?.message?.content ?? ''
 
   try {
     const cleaned = text.replace(/```json|```/g, '').trim()
