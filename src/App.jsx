@@ -4,6 +4,7 @@ import { useConfigStore } from './stores/configStore'
 import { useFoodStore } from './stores/foodStore'
 import { useWorkoutStore } from './stores/workoutStore'
 import { useMealPlanStore } from './stores/mealPlanStore'
+import { useMeasurementsStore } from './stores/measurementsStore'
 import BottomNav from './components/layout/BottomNav'
 import Today from './pages/Today'
 import Food from './pages/Food'
@@ -42,6 +43,7 @@ export default function App() {
     useFoodStore.persist.rehydrate()
     useWorkoutStore.persist.rehydrate()
     useMealPlanStore.persist.rehydrate()
+    useMeasurementsStore.persist.rehydrate()
 
     // Auto-popola il nome se non è ancora impostato
     setTimeout(() => {
