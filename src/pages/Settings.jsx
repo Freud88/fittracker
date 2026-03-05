@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft } from 'lucide-react'
+import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft, LogOut } from 'lucide-react'
+import { supabase, isSupabaseReady } from '../services/supabase'
 import { useConfigStore } from '../stores/configStore'
 import { useFoodStore } from '../stores/foodStore'
 import { useWorkoutStore } from '../stores/workoutStore'
@@ -10,7 +11,7 @@ import AddCustomMealModal from '../components/plan/AddCustomMealModal'
 
 const catLabels = { breakfast: 'Colazione', lunch: 'Pranzo', snack: 'Spuntino', dinner: 'Cena' }
 
-export default function Settings() {
+export default function Settings({ session }) {
   const { targets, userInfo, updateTargets, updateUserInfo } = useConfigStore()
   const { foodLog } = useFoodStore()
   const { workouts } = useWorkoutStore()
@@ -207,9 +208,28 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Account */}
+        {isSupabaseReady() && session && (
+          <div>
+            <p className="text-text-muted text-xs uppercase tracking-wider mb-3">Account</p>
+            <div className="bg-surface2 rounded-xl px-4 py-3 flex justify-between items-center mb-2">
+              <div>
+                <p className="text-text text-sm font-medium">{session.user.user_metadata?.name || 'Utente'}</p>
+                <p className="text-text-dim text-xs">{session.user.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="w-full flex items-center gap-3 bg-surface2 rounded-xl px-4 py-3 text-accent-red text-sm"
+            >
+              <LogOut size={18} />
+              Esci dall'account
+            </button>
+          </div>
+        )}
+
         <div className="text-center pt-2">
           <p className="text-text-dim text-xs">FitTracker Personal v1.0</p>
-          <p className="text-text-dim text-xs">Tutti i dati sono salvati localmente</p>
         </div>
       </div>
 
