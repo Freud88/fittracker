@@ -11,6 +11,7 @@ import Header from '../components/layout/Header'
 import DailyProgress from '../components/dashboard/DailyProgress'
 import QuickAdd from '../components/dashboard/QuickAdd'
 import AddMealModal from '../components/food/AddMealModal'
+import PhotoMealCapture from '../components/food/PhotoMealCapture'
 import AddWorkoutModal from '../components/workout/AddWorkoutModal'
 import FoodLog from '../components/food/FoodLog'
 import { Dumbbell, CheckCircle } from 'lucide-react'
@@ -18,6 +19,7 @@ import { Dumbbell, CheckCircle } from 'lucide-react'
 export default function Today({ onNavigate }) {
   const [showMealModal, setShowMealModal] = useState(false)
   const [showWorkoutModal, setShowWorkoutModal] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
 
   const { getTodayTotals, getTodayLog, addMeal, removeMeal } = useFoodStore()
   const { targets, userInfo } = useConfigStore()
@@ -64,6 +66,7 @@ export default function Today({ onNavigate }) {
       <DailyProgress totals={totals} targets={todayTarget} />
       <QuickAdd
         onAddMeal={() => setShowMealModal(true)}
+        onPhotoMeal={() => setShowCamera(true)}
         onAddWorkout={() => todayWorkout ? onNavigate('workout') : setShowWorkoutModal(true)}
         onViewSuggestions={() => onNavigate('food')}
       />
@@ -136,6 +139,23 @@ export default function Today({ onNavigate }) {
 
       {showMealModal && (
         <AddMealModal onAdd={addMeal} onClose={() => setShowMealModal(false)} />
+      )}
+
+      {showCamera && (
+        <PhotoMealCapture
+          onConfirm={(meal) => {
+            addMeal(today, {
+              id: crypto.randomUUID(),
+              time: new Date().toTimeString().slice(0, 5),
+              category: 'pranzo',
+              quantity: 1,
+              unit: 'porzione',
+              ...meal,
+            })
+            setShowCamera(false)
+          }}
+          onClose={() => setShowCamera(false)}
+        />
       )}
 
       {showWorkoutModal && (
