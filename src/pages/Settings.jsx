@@ -225,7 +225,7 @@ export default function Settings({ session, onNavigate }) {
             </div>
             <button
               onClick={async () => {
-                ['fittracker_config','fittracker_food','fittracker_workout','fittracker_mealplan','fittracker_measurements']
+                ['fittracker_config','fittracker_food_log','fittracker_workouts','fittracker_meal_plan','fittracker_measurements']
                   .forEach(k => localStorage.removeItem(k))
                 await supabase.auth.signOut()
                 window.location.reload()

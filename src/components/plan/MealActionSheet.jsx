@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Check, Edit3, Shuffle, Ban } from 'lucide-react'
+import { X, Check, Edit3, Shuffle, Ban, SkipForward } from 'lucide-react'
 import FoodSearch from '../food/FoodSearch'
 import { calcMacroFromFood } from '../../utils/macroCalc'
 import { formatIngredient } from '../../utils/formatIngredient'
@@ -13,7 +13,7 @@ const catLabels = {
 
 export default function MealActionSheet({
   meal, date, category, dailyTarget,
-  onMarkEaten, onRecordActual, onRegenerate, onBan, onClose
+  onMarkEaten, onSkip, onRecordActual, onRegenerate, onBan, onClose
 }) {
   const [mode, setMode] = useState('actions') // 'actions' | 'eaten_other'
   const [selectedFood, setSelectedFood] = useState(null)
@@ -45,7 +45,7 @@ export default function MealActionSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-surface rounded-t-2xl p-4 pb-8 max-h-[85vh] overflow-y-auto"
+        className="w-full bg-surface rounded-t-2xl p-4 pb-12 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />
@@ -81,6 +81,14 @@ export default function MealActionSheet({
               >
                 <Check size={18} className="text-accent-green" />
                 <span className="text-text text-sm font-medium">Mangiato come da piano</span>
+              </button>
+
+              <button
+                onClick={() => { onSkip?.(date, category); onClose() }}
+                className="w-full flex items-center gap-3 bg-surface2 rounded-xl px-4 py-3 text-left active:bg-border"
+              >
+                <SkipForward size={18} className="text-text-muted" />
+                <span className="text-text text-sm font-medium">Pasto saltato</span>
               </button>
 
               <button

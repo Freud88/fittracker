@@ -1,5 +1,6 @@
 import { RefreshCw, Calendar, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMealPlanStore } from '../stores/mealPlanStore'
+import { useFoodStore } from '../stores/foodStore'
 import { useConfigStore } from '../stores/configStore'
 import { getToday } from '../utils/dateUtils'
 import { getWeekDelta, getFutureDaysCount } from '../utils/mealPlanner'
@@ -25,11 +26,30 @@ export default function Plan() {
     regenerateDay,
     regenerateMeal,
     markMealEaten,
+    skipMeal,
     recordActualMeal,
     banMeal,
     addCustomMeal,
   } = useMealPlanStore()
   const { targets } = useConfigStore()
+  const { addMeal } = useFoodStore()
+
+  function handleMarkEaten(date, category) {
+    const meal = plan?.days[date]?.meals[category]
+    if (meal) {
+      addMeal(date, {
+        id: crypto.randomUUID(),
+        name: meal.name,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        time: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+        category,
+      })
+    }
+    markMealEaten(date, category)
+  }
 
   const delta       = getWeekDelta(plan)
   const futureDays  = getFutureDaysCount(plan)
@@ -84,7 +104,8 @@ export default function Plan() {
           <WeekGrid
             plan={plan}
             dailyTarget={targets}
-            onMarkEaten={markMealEaten}
+            onMarkEaten={handleMarkEaten}
+            onSkip={skipMeal}
             onRecordActual={(d, c, m) => recordActualMeal(d, c, m, targets)}
             onRegenerate={regenerateMeal}
             onRegenerateDay={regenerateDay}

@@ -10,6 +10,7 @@ const CAT_LABELS  = { breakfast: 'Colazione', lunch: 'Pranzo', snack: 'Spuntino'
 
 function StatusBadge({ meal }) {
   if (!meal) return null
+  if (meal.skipped) return <span className="text-[9px] text-text-dim font-medium uppercase tracking-wide">Saltato</span>
   if (meal.eaten && !meal.actual) return <Check size={13} className="text-accent-green" />
   if (meal.actual) return <Edit3 size={13} className="text-accent-gold" />
   if (meal.adjusted) return <RefreshCw size={13} className="text-accent-blue" />
@@ -18,7 +19,7 @@ function StatusBadge({ meal }) {
 
 export default function WeekGrid({
   plan, dailyTarget,
-  onMarkEaten, onRecordActual, onRegenerate, onBan, onRegenerateDay,
+  onMarkEaten, onSkip, onRecordActual, onRegenerate, onBan, onRegenerateDay,
 }) {
   const today      = getToday()
   const sortedDays = Object.keys(plan.days).sort()
@@ -97,9 +98,10 @@ export default function WeekGrid({
               key={cat}
               onClick={() => meal && setSelectedMeal({ date: selectedDate, category: cat })}
               className={`w-full text-left rounded-2xl p-4 transition-colors
-                ${meal?.eaten  ? 'bg-accent-green/10 border border-accent-green/20' :
-                  meal?.actual ? 'bg-accent-gold/10  border border-accent-gold/20'  :
-                                 'bg-surface2'}
+                ${meal?.skipped ? 'bg-surface2 opacity-50' :
+                  meal?.eaten   ? 'bg-accent-green/10 border border-accent-green/20' :
+                  meal?.actual  ? 'bg-accent-gold/10  border border-accent-gold/20'  :
+                                  'bg-surface2'}
                 ${!meal ? 'opacity-40 cursor-default' : 'active:brightness-110'}`}
             >
               {/* top row */}
@@ -148,6 +150,7 @@ export default function WeekGrid({
           category={selectedMeal.category}
           dailyTarget={dailyTarget}
           onMarkEaten={(d, c) => { onMarkEaten(d, c); setSelectedMeal(null) }}
+          onSkip={(d, c) => { onSkip?.(d, c); setSelectedMeal(null) }}
           onRecordActual={onRecordActual}
           onRegenerate={(d, c) => { onRegenerate(d, c); setSelectedMeal(null) }}
           onBan={(id) => { onBan(id); setSelectedMeal(null) }}

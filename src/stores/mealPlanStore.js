@@ -44,6 +44,20 @@ export const useMealPlanStore = create(
         set({ plan: markEaten(plan, date, category) })
       },
 
+      skipMeal: (date, category) =>
+        set((state) => {
+          if (!state.plan) return state
+          const days = { ...state.plan.days }
+          days[date] = {
+            ...days[date],
+            meals: {
+              ...days[date].meals,
+              [category]: { ...days[date].meals[category], skipped: true, eaten: false },
+            },
+          }
+          return { plan: { ...state.plan, days } }
+        }),
+
       recordActualMeal: (date, category, actualMeal, dailyTarget) => {
         const { plan } = get()
         if (!plan) return

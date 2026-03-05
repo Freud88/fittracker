@@ -40,7 +40,7 @@ export default function AddMeasurementModal({ onAdd, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-surface rounded-t-2xl p-4 pb-8 max-h-[90vh] overflow-y-auto"
+        className="w-full bg-surface rounded-t-2xl p-4 pb-12 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />

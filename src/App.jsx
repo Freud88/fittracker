@@ -42,9 +42,9 @@ export default function App() {
 
     const STORE_KEYS = [
       'fittracker_config',
-      'fittracker_food',
-      'fittracker_workout',
-      'fittracker_mealplan',
+      'fittracker_food_log',
+      'fittracker_workouts',
+      'fittracker_meal_plan',
       'fittracker_measurements',
     ]
     const stores = [useConfigStore, useFoodStore, useWorkoutStore, useMealPlanStore, useMeasurementsStore]
