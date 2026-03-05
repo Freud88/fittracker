@@ -116,7 +116,7 @@ export default function PhotoMealCapture({ onConfirm, onClose }) {
               <img src={preview} alt="" className="w-64 h-64 object-cover rounded-2xl opacity-40" />
             )}
             <RefreshCw size={32} className="text-white animate-spin" />
-            <p className="text-white/60 text-sm">Gemini sta analizzando il pasto…</p>
+            <p className="text-white/60 text-sm">Analisi del pasto in corso…</p>
           </div>
         )}
 
@@ -124,7 +124,7 @@ export default function PhotoMealCapture({ onConfirm, onClose }) {
         {phase === 'review' && estimate && (
           <div className="flex-1 overflow-y-auto px-4 pb-8 space-y-3">
             {preview && (
-              <img src={preview} alt="pasto" className="w-full h-44 object-cover rounded-2xl" />
+              <img src={preview} alt="pasto" className="w-full max-h-64 object-contain rounded-2xl bg-black" />
             )}
 
             {/* Alimenti riconosciuti */}
