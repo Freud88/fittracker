@@ -42,17 +42,20 @@ export async function pullFromCloud(key) {
   }
 }
 
-// Adapter sincrono per Zustand persist — localStorage è la fonte di verità locale
+// Adapter per Zustand persist (PersistStorage interface):
+// getItem deve restituire l'oggetto parsato, setItem riceve già l'oggetto
 export const syncStorage = {
-  getItem: (key) => localStorage.getItem(key),
+  getItem: (key) => {
+    const str = localStorage.getItem(key)
+    if (!str) return null
+    try { return JSON.parse(str) } catch { return null }
+  },
 
   setItem: (key, value) => {
-    let parsed
-    try { parsed = JSON.parse(value) } catch { parsed = value }
-    // Salva in localStorage con timestamp per il confronto cloud
-    localStorage.setItem(key, JSON.stringify({ ...parsed, _syncedAt: Date.now() }))
+    // value è già un oggetto { state: {...}, version: 0 }
+    localStorage.setItem(key, JSON.stringify({ ...value, _syncedAt: Date.now() }))
     // Push su Supabase in background (fire & forget)
-    pushToCloud(key, parsed)
+    pushToCloud(key, value)
   },
 
   removeItem: (key) => {
