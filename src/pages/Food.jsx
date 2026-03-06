@@ -12,17 +12,14 @@ import PhotoMealCapture from '../components/food/PhotoMealCapture'
 import MacroSummary from '../components/food/MacroSummary'
 import MealSuggestions from '../components/suggestions/MealSuggestions'
 
-const TABS = ['Diario', 'Suggerimenti', 'Database']
+const TABS = ['Diario', 'Suggerimenti']
 
 export default function Food() {
   const [activeTab, setActiveTab] = useState('Diario')
   const [showModal, setShowModal] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
-  const [showAddCustom, setShowAddCustom] = useState(false)
-  const [customFood, setCustomFood] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '' })
 
-  const { getTodayLog, getTodayTotals, foodDatabase, addMeal, removeMeal, addCustomFood, removeCustomFood } = useFoodStore()
-  // FoodSearch ora usa USDA direttamente — foodDatabase usato solo per la tab Database locale
+  const { getTodayLog, getTodayTotals, addMeal, removeMeal } = useFoodStore()
   const { targets } = useConfigStore()
 
   const today = getToday()
@@ -45,21 +42,6 @@ export default function Food() {
     }
     addMeal(today, meal)
     setActiveTab('Diario')
-  }
-
-  function handleSaveCustomFood() {
-    if (!customFood.name) return
-    addCustomFood({
-      name: customFood.name,
-      per100g: {
-        calories: parseFloat(customFood.calories) || 0,
-        protein: parseFloat(customFood.protein) || 0,
-        carbs: parseFloat(customFood.carbs) || 0,
-        fat: parseFloat(customFood.fat) || 0,
-      },
-    })
-    setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '' })
-    setShowAddCustom(false)
   }
 
   return (
@@ -113,65 +95,6 @@ export default function Food() {
 
         {activeTab === 'Suggerimenti' && (
           <MealSuggestions remaining={remaining} onAdd={handleAddSuggestion} />
-        )}
-
-        {activeTab === 'Database' && (
-          <div>
-            {!showAddCustom ? (
-              <button
-                onClick={() => setShowAddCustom(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-border text-text-muted text-sm mb-4"
-              >
-                <Plus size={16} /> Aggiungi alimento custom
-              </button>
-            ) : (
-              <div className="bg-surface rounded-xl p-4 mb-4 space-y-2">
-                <p className="text-text font-semibold text-sm mb-2">Nuovo alimento (per 100g)</p>
-                <input
-                  type="text"
-                  placeholder="Nome alimento"
-                  value={customFood.name}
-                  onChange={(e) => setCustomFood({ ...customFood, name: e.target.value })}
-                  className="w-full bg-surface2 border border-border rounded-lg px-3 py-2 text-text text-sm outline-none focus:border-accent-blue"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  {['calories', 'protein', 'carbs', 'fat'].map((f) => (
-                    <input
-                      key={f}
-                      type="number"
-                      inputMode="decimal"
-                      placeholder={f === 'calories' ? 'Kcal' : f === 'protein' ? 'Proteine g' : f === 'carbs' ? 'Carb g' : 'Grassi g'}
-                      value={customFood[f]}
-                      onChange={(e) => setCustomFood({ ...customFood, [f]: e.target.value })}
-                      className="bg-surface2 border border-border rounded-lg px-3 py-2 text-text text-sm outline-none focus:border-accent-blue"
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button onClick={() => setShowAddCustom(false)} className="flex-1 py-2 rounded-lg bg-surface2 text-text-muted text-sm">Annulla</button>
-                  <button onClick={handleSaveCustomFood} className="flex-1 py-2 rounded-lg bg-accent-blue text-white text-sm font-semibold">Salva</button>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {foodDatabase.map((food) => (
-                <div key={food.id} className="bg-surface rounded-xl px-3 py-2.5 flex justify-between items-center">
-                  <div>
-                    <p className="text-text text-sm">{food.name}</p>
-                    <p className="text-text-dim text-xs">
-                      {food.per100g.calories}kcal · P{food.per100g.protein} C{food.per100g.carbs} G{food.per100g.fat}
-                    </p>
-                  </div>
-                  {food.custom && (
-                    <button onClick={() => removeCustomFood(food.id)} className="text-text-dim text-xs px-2 py-1 rounded bg-surface2">
-                      rimuovi
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
 
