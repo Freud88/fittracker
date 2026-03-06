@@ -75,8 +75,10 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
                     alt={data.name}
                     className="h-52 object-contain"
                   />
-                ) : (
+                ) : loading ? (
                   <Loader size={24} className="text-accent-blue animate-spin" />
+                ) : (
+                  <p className="text-text-dim text-xs">Animazione non disponibile</p>
                 )}
               </div>
 

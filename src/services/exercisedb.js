@@ -4,8 +4,9 @@ const BASE_URL = 'https://exercisedb.p.rapidapi.com'
 // Italian/mixed names → English search term for ExerciseDB
 const NAME_MAP = [
   ['chest press',      'chest press'],
-  ['pectoral fly',     'pec deck'],
-  ['pec fly',          'pec deck'],
+  ['pectoral fly',     'pec deck fly'],
+  ['pec fly',          'pec deck fly'],
+  [' fly',             'pec deck fly'],
   ['lat machine',      'lat pulldown'],
   ['lat pulldown',     'lat pulldown'],
   ['low row',          'seated cable row'],
@@ -87,9 +88,11 @@ export async function fetchGifBlob(gifUrl) {
   if (!gifUrl) return null
   if (gifBlobCache[gifUrl]) return gifBlobCache[gifUrl]
   try {
-    const res = await fetch(gifUrl, { headers: HEADERS })
+    // Plain fetch (no custom headers) avoids CORS preflight on the CDN
+    const res = await fetch(gifUrl)
     if (!res.ok) return null
     const blob = await res.blob()
+    if (!blob.type.startsWith('image/')) return null
     const objectUrl = URL.createObjectURL(blob)
     gifBlobCache[gifUrl] = objectUrl
     return objectUrl
