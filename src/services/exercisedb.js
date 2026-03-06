@@ -1,102 +1,102 @@
-const API_KEY  = import.meta.env.VITE_RAPIDAPI_KEY
-const BASE_URL = 'https://exercisedb.p.rapidapi.com'
+// Free exercise database — no API key needed, GIFs hosted on GitHub
+const DB_URL  = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json'
+const GIF_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises'
 
-// Italian/mixed names → English search term for ExerciseDB
+// Italian/mixed → English keywords for matching
 const NAME_MAP = [
-  ['chest press',      'chest press'],
-  ['pectoral fly',     'pec deck fly'],
-  ['pec fly',          'pec deck fly'],
-  [' fly',             'pec deck fly'],
-  ['lat machine',      'lat pulldown'],
-  ['lat pulldown',     'lat pulldown'],
-  ['low row',          'seated cable row'],
-  ['face pull',        'face pull'],
-  ['hip thrust',       'hip thrust'],
-  ['stacco rumeno',    'romanian deadlift'],
-  ['romanian',         'romanian deadlift'],
-  ['leg press',        'leg press'],
-  ['leg extension',    'leg extension'],
-  ['leg curl',         'leg curl'],
-  ['polpacci',         'calf raise'],
-  ['calf',             'calf raise'],
-  ['alzate laterali',  'lateral raise'],
-  ['lateral raise',    'lateral raise'],
-  ['curl bilanciere',  'barbell curl'],
-  ['curl manubri',     'dumbbell curl'],
-  ['bicep curl',       'barbell curl'],
-  ['bicep',            'barbell curl'],
-  ['pushdown',         'tricep pushdown'],
-  ['tricep',           'tricep pushdown'],
-  ['crunch',           'crunch'],
-  ['palla medica',     'medicine ball'],
-  ['medicine ball',    'medicine ball'],
-  ['plank',            'plank'],
-  ['incline walking',  'walking'],
-  ['squat',            'squat'],
-  ['stacco',           'deadlift'],
-  ['deadlift',         'deadlift'],
-  ['panca piana',      'barbell bench press'],
-  ['bench press',      'barbell bench press'],
-  ['lento avanti',     'shoulder press'],
-  ['shoulder press',   'shoulder press'],
-  ['pull up',          'pull up'],
-  ['pullup',           'pull up'],
-  ['trazioni',         'pull up'],
-  ['dip',              'tricep dip'],
-  ['affondi',          'lunge'],
-  ['lunge',            'lunge'],
-  ['rematore',         'barbell row'],
-  ['row',              'barbell row'],
-  ['military press',   'military press'],
-  ['arnold press',     'arnold press'],
+  ['chest press',     'chest press'],
+  ['pectoral fly',    'pec deck'],
+  ['pec fly',         'pec deck'],
+  [' fly',            'pec deck'],
+  ['lat machine',     'lat pulldown'],
+  ['lat pulldown',    'lat pulldown'],
+  ['low row',         'seated cable row'],
+  ['face pull',       'face pull'],
+  ['hip thrust',      'hip thrust'],
+  ['stacco rumeno',   'romanian deadlift'],
+  ['romanian',        'romanian deadlift'],
+  ['leg press',       'leg press'],
+  ['leg extension',   'leg extension'],
+  ['leg curl',        'leg curl'],
+  ['polpacci',        'calf raise'],
+  ['calf',            'calf raise'],
+  ['alzate laterali', 'lateral raise'],
+  ['lateral raise',   'lateral raise'],
+  ['curl bilanciere', 'barbell curl'],
+  ['curl manubri',    'dumbbell curl'],
+  ['bicep curl',      'barbell curl'],
+  ['bicep',           'barbell curl'],
+  ['pushdown',        'tricep pushdown'],
+  ['tricep',          'tricep'],
+  ['crunch',          'crunch'],
+  ['plank',           'plank'],
+  ['incline walking', 'treadmill'],
+  ['squat',           'squat'],
+  ['stacco',          'deadlift'],
+  ['deadlift',        'deadlift'],
+  ['panca piana',     'bench press'],
+  ['bench press',     'bench press'],
+  ['lento avanti',    'shoulder press'],
+  ['shoulder press',  'shoulder press'],
+  ['pull up',         'pull-up'],
+  ['pullup',          'pull-up'],
+  ['trazioni',        'pull-up'],
+  ['dip',             'dip'],
+  ['affondi',         'lunge'],
+  ['lunge',           'lunge'],
+  ['rematore',        'barbell row'],
+  ['row',             'row'],
+  ['military press',  'military press'],
+  ['arnold press',    'arnold press'],
 ]
 
-function toEnglish(name) {
-  // strip parenthetical suffixes like "(macchina)", "(cavi)", etc.
-  const cleaned = name.replace(/\s*\(.*?\)/g, '').trim()
-  const lower = cleaned.toLowerCase()
+function toSearchTerm(name) {
+  const cleaned = name.replace(/\s*\(.*?\)/g, '').trim().toLowerCase()
   for (const [it, en] of NAME_MAP) {
-    if (lower.includes(it)) return en
+    if (cleaned.includes(it)) return en
   }
-  return cleaned // fallback: use cleaned name
+  return cleaned
+}
+
+let _db = null
+
+async function getDb() {
+  if (_db) return _db
+  const res = await fetch(DB_URL)
+  if (!res.ok) throw new Error('Impossibile caricare il database esercizi')
+  _db = await res.json()
+  return _db
 }
 
 const cache = {}
-const gifBlobCache = {}
-
-const HEADERS = {
-  'X-RapidAPI-Key':  API_KEY,
-  'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com',
-}
 
 export async function searchExercise(name) {
-  const searchTerm = toEnglish(name)
-  if (cache[searchTerm]) return cache[searchTerm]
+  const term = toSearchTerm(name)
+  if (cache[term]) return cache[term]
 
-  const res = await fetch(
-    `${BASE_URL}/exercises/name/${encodeURIComponent(searchTerm)}?limit=3&offset=0`,
-    { headers: HEADERS }
-  )
-  if (!res.ok) throw new Error(`ExerciseDB error: ${res.status}`)
-  const data = await res.json()
-  const result = data[0] || null
-  cache[searchTerm] = result
-  return result
-}
+  const db = await getDb()
+  const words = term.split(' ').filter(Boolean)
 
-export async function fetchGifBlob(gifUrl) {
-  if (!gifUrl) return null
-  if (gifBlobCache[gifUrl]) return gifBlobCache[gifUrl]
-  try {
-    // Plain fetch (no custom headers) avoids CORS preflight on the CDN
-    const res = await fetch(gifUrl)
-    if (!res.ok) return null
-    const blob = await res.blob()
-    if (!blob.type.startsWith('image/')) return null
-    const objectUrl = URL.createObjectURL(blob)
-    gifBlobCache[gifUrl] = objectUrl
-    return objectUrl
-  } catch {
-    return null
+  // Score each exercise by how many keywords match
+  let best = null
+  let bestScore = 0
+  for (const ex of db) {
+    const exName = ex.name.toLowerCase()
+    const score = words.filter(w => exName.includes(w)).length
+    if (score > bestScore) { bestScore = score; best = ex }
   }
+
+  if (!best || bestScore === 0) { cache[term] = null; return null }
+
+  const result = {
+    name:             best.name,
+    bodyPart:         best.category,
+    target:           best.primaryMuscles?.[0] || '',
+    equipment:        best.equipment,
+    secondaryMuscles: best.secondaryMuscles || [],
+    instructions:     best.instructions || [],
+    gifUrl:           `${GIF_BASE}/${best.id}/0.gif`,
+  }
+  cache[term] = result
+  return result
 }

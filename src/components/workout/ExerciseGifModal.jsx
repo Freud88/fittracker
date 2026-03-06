@@ -1,26 +1,24 @@
 import { useState, useEffect } from 'react'
 import { X, ChevronDown, ChevronUp, Loader } from 'lucide-react'
-import { searchExercise, fetchGifBlob } from '../../services/exercisedb'
+import { searchExercise } from '../../services/exercisedb'
 
 export default function ExerciseGifModal({ exerciseName, onClose }) {
   const [data, setData]       = useState(null)
-  const [gifSrc, setGifSrc]   = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
+  const [gifError, setGifError] = useState(false)
   const [showSteps, setShowSteps] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    setGifSrc(null)
+    setGifError(false)
     searchExercise(exerciseName)
-      .then(async result => {
+      .then(result => {
         if (cancelled) return
-        if (!result) { setError('Esercizio non trovato nel database'); return }
-        setData(result)
-        const blobUrl = await fetchGifBlob(result.gifUrl)
-        if (!cancelled) setGifSrc(blobUrl)
+        if (result) setData(result)
+        else setError('Esercizio non trovato nel database')
       })
       .catch(err => { if (!cancelled) setError(err.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -69,16 +67,15 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
             <>
               {/* GIF */}
               <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center" style={{minHeight: '208px'}}>
-                {gifSrc ? (
+                {gifError ? (
+                  <p className="text-text-dim text-xs">Animazione non disponibile</p>
+                ) : (
                   <img
-                    src={gifSrc}
+                    src={data.gifUrl}
                     alt={data.name}
                     className="h-52 object-contain"
+                    onError={() => setGifError(true)}
                   />
-                ) : loading ? (
-                  <Loader size={24} className="text-accent-blue animate-spin" />
-                ) : (
-                  <p className="text-text-dim text-xs">Animazione non disponibile</p>
                 )}
               </div>
 
