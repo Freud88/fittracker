@@ -1,7 +1,8 @@
-const API_KEY = import.meta.env.VITE_GROQ_API_KEY
-const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
+const API_KEY  = import.meta.env.VITE_ANTHROPIC_API_KEY
+const ENDPOINT = 'https://api.anthropic.com/v1/messages'
+const MODEL    = 'claude-haiku-4-5-20251001'
 
-const PROMPT = `Analizza questo pasto e fornisci una stima nutrizionale.
+const PROMPT = `Analizza questo pasto e fornisci una stima nutrizionale precisa.
 Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo né backtick, in questo formato:
 
 {
@@ -33,23 +34,24 @@ Regole:
 - Se non riesci a identificare il cibo: dishes:[] e spiega in notes`
 
 export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg') {
-  if (!API_KEY) throw new Error('Chiave API Groq non configurata (VITE_GROQ_API_KEY)')
+  if (!API_KEY) throw new Error('Chiave API Anthropic non configurata (VITE_ANTHROPIC_API_KEY)')
 
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: MODEL,
       max_tokens: 1024,
-      temperature: 0.2,
       messages: [
         {
           role: 'user',
           content: [
-            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}`, detail: 'low' } },
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Image } },
             { type: 'text', text: PROMPT },
           ],
         },
@@ -59,11 +61,11 @@ export async function estimateFoodFromPhoto(base64Image, mimeType = 'image/jpeg'
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `Groq API error: ${response.status}`)
+    throw new Error(err?.error?.message ?? `Anthropic API error: ${response.status}`)
   }
 
   const data = await response.json()
-  const text = data.choices?.[0]?.message?.content ?? ''
+  const text = data.content?.[0]?.text ?? ''
 
   try {
     const cleaned = text.replace(/```json|```/g, '').trim()
