@@ -5,9 +5,9 @@ const GIF_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/mai
 // Italian/mixed → English keywords for matching
 const NAME_MAP = [
   ['chest press',     'chest press'],
-  ['pectoral fly',    'pec deck'],
-  ['pec fly',         'pec deck'],
-  [' fly',            'pec deck'],
+  ['pectoral fly',    'dumbbell flyes'],
+  ['pec fly',         'dumbbell flyes'],
+  [' fly',            'dumbbell flyes'],
   ['lat machine',     'lat pulldown'],
   ['lat pulldown',    'lat pulldown'],
   ['low row',         'seated cable row'],
@@ -95,7 +95,7 @@ export async function searchExercise(name) {
     equipment:        best.equipment,
     secondaryMuscles: best.secondaryMuscles || [],
     instructions:     best.instructions || [],
-    gifUrl:           `${GIF_BASE}/${best.id}/0.gif`,
+    gifUrl:           best.images?.[0] ? `${GIF_BASE}/${best.images[0]}` : null,
   }
   cache[term] = result
   return result
