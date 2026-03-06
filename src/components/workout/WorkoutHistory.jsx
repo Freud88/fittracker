@@ -147,32 +147,23 @@ function WorkoutCard({ workout }) {
                 const unit = ex.unit || 'kg'
                 const bestSet = ex.sets.filter(s => s.completed).sort((a, b) => (b.weight * b.reps) - (a.weight * a.reps))[0]
                 return (
-                  <div key={ex.id} className="px-4 pt-3 pb-3 border-b border-border/50 last:border-b-0">
-                    {/* Exercise name + best set */}
-                    <div className="flex items-baseline justify-between mb-2">
-                      <p className="text-text text-sm font-semibold">{ex.name}</p>
+                  <div key={ex.id} className="px-4 py-2.5 border-b border-border/40 last:border-b-0 flex items-center gap-3">
+                    {/* Name + best */}
+                    <div className="w-[38%] shrink-0">
+                      <p className="text-text text-xs font-semibold leading-tight">{ex.name}</p>
                       {bestSet && (
-                        <p className="text-text-dim text-[11px]">
-                          max {bestSet.weight}{unit} × {bestSet.reps}
-                        </p>
+                        <p className="text-text-dim text-[10px] mt-0.5">max {bestSet.weight}{unit} × {bestSet.reps}</p>
                       )}
                     </div>
-                    {/* Sets table */}
-                    <div className="grid grid-cols-[28px_1fr_1fr_20px] gap-x-2 gap-y-1">
-                      <span className="text-[10px] text-text-dim font-semibold uppercase">Set</span>
-                      <span className="text-[10px] text-text-dim font-semibold uppercase">Rip</span>
-                      <span className="text-[10px] text-text-dim font-semibold uppercase">Peso</span>
-                      <span />
+                    {/* Sets inline */}
+                    <div className="flex flex-wrap gap-1.5">
                       {ex.sets.map((s, i) => (
-                        <>
-                          <span key={`n${i}`} className="text-xs text-text-dim">#{i + 1}</span>
-                          <span key={`r${i}`} className={`text-xs font-medium ${s.completed ? 'text-text' : 'text-text-dim'}`}>{s.reps}</span>
-                          <span key={`w${i}`} className={`text-xs font-medium ${s.completed ? 'text-text' : 'text-text-dim'}`}>{s.weight} {unit}</span>
-                          <span key={`c${i}`} className={`text-xs ${s.completed ? 'text-accent-green' : 'text-border'}`}>{s.completed ? '✓' : '–'}</span>
-                        </>
+                        <span key={i} className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${s.completed ? 'bg-surface2 text-text' : 'bg-surface2/40 text-text-dim line-through'}`}>
+                          {s.reps}×{s.weight}{unit}
+                        </span>
                       ))}
                     </div>
-                    {ex.notes && <p className="text-text-dim text-xs mt-1.5 italic">"{ex.notes}"</p>}
+                    {ex.notes && <p className="text-text-dim text-[10px] italic shrink-0">"{ex.notes}"</p>}
                   </div>
                 )
               })}
