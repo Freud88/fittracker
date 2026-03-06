@@ -145,17 +145,9 @@ function WorkoutCard({ workout }) {
               )}
               {exs.map(ex => {
                 const unit = ex.unit || 'kg'
-                const bestSet = ex.sets.filter(s => s.completed).sort((a, b) => (b.weight * b.reps) - (a.weight * a.reps))[0]
                 return (
                   <div key={ex.id} className="px-4 py-2.5 border-b border-border/40 last:border-b-0 flex items-center gap-3">
-                    {/* Name + best */}
-                    <div className="w-[38%] shrink-0">
-                      <p className="text-text text-xs font-semibold leading-tight">{ex.name}</p>
-                      {bestSet && (
-                        <p className="text-text-dim text-[10px] mt-0.5">max {bestSet.weight}{unit} × {bestSet.reps}</p>
-                      )}
-                    </div>
-                    {/* Sets inline */}
+                    <p className="text-text text-xs font-semibold w-[38%] shrink-0 leading-tight">{ex.name}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {ex.sets.map((s, i) => (
                         <span key={i} className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${s.completed ? 'bg-surface2 text-text' : 'bg-surface2/40 text-text-dim line-through'}`}>
@@ -163,7 +155,6 @@ function WorkoutCard({ workout }) {
                         </span>
                       ))}
                     </div>
-                    {ex.notes && <p className="text-text-dim text-[10px] italic shrink-0">"{ex.notes}"</p>}
                   </div>
                 )
               })}
