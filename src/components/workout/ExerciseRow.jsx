@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2, Plus, PlayCircle } from 'lucide-react'
 import SetTracker from './SetTracker'
+import ExerciseGifModal from './ExerciseGifModal'
 
 export default function ExerciseRow({ exercise, date, onUpdateSet, onRemove, onAddSet }) {
   const [expanded, setExpanded] = useState(true)
+  const [showGif, setShowGif]   = useState(false)
 
   const completedSets = exercise.sets.filter((s) => s.completed).length
   const allDone = completedSets === exercise.sets.length
 
   return (
-    <div className={`rounded-xl border transition-colors ${allDone ? 'border-accent-green/40 bg-accent-green/5' : 'border-border bg-surface'}`}>
+    <>
+      {showGif && <ExerciseGifModal exerciseName={exercise.name} onClose={() => setShowGif(false)} />}
+      <div className={`rounded-xl border transition-colors ${allDone ? 'border-accent-green/40 bg-accent-green/5' : 'border-border bg-surface'}`}>
       {/* Header */}
       <div className="flex items-center px-3 py-3 gap-2">
         <div className="flex-1 min-w-0" onClick={() => setExpanded(!expanded)}>
@@ -21,6 +25,9 @@ export default function ExerciseRow({ exercise, date, onUpdateSet, onRemove, onA
         <span className="text-text-muted text-xs shrink-0">
           {completedSets}/{exercise.sets.length} set
         </span>
+        <button onClick={() => setShowGif(true)} className="text-text-dim p-1" title="Vedi animazione">
+          <PlayCircle size={16} />
+        </button>
         <button onClick={() => onRemove(exercise.id)} className="text-text-dim p-1">
           <Trash2 size={14} />
         </button>
@@ -46,5 +53,6 @@ export default function ExerciseRow({ exercise, date, onUpdateSet, onRemove, onA
         </div>
       )}
     </div>
+    </>
   )
 }
