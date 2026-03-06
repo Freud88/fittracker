@@ -6,8 +6,9 @@ import Header from '../components/layout/Header'
 import WorkoutLog from '../components/workout/WorkoutLog'
 import WorkoutHistory from '../components/workout/WorkoutHistory'
 import AddWorkoutModal from '../components/workout/AddWorkoutModal'
+import TemplateManager from '../components/workout/TemplateManager'
 
-const TABS = ['Oggi', 'Storico']
+const TABS = ['Oggi', 'Storico', 'Template']
 
 export default function Workout() {
   const [activeTab, setActiveTab] = useState('Oggi')
@@ -25,6 +26,8 @@ export default function Workout() {
     completeWorkout,
     cancelWorkout,
     getWorkoutHistory,
+    addTemplate,
+    deleteTemplate,
   } = useWorkoutStore()
 
   const today = getToday()
@@ -109,6 +112,16 @@ export default function Workout() {
 
         {activeTab === 'Storico' && (
           <WorkoutHistory workouts={history} />
+        )}
+
+        {activeTab === 'Template' && (
+          <TemplateManager
+            templates={templates}
+            onAddTemplate={addTemplate}
+            onDeleteTemplate={deleteTemplate}
+            onLoadTemplate={(tid) => { loadTemplate(tid, today); setActiveTab('Oggi') }}
+            onClose={() => setActiveTab('Oggi')}
+          />
         )}
       </div>
 

@@ -165,6 +165,12 @@ export const useWorkoutStore = create(
         set((state) => ({ templates: [...state.templates, template] }))
       },
 
+      addTemplate: (template) =>
+        set((state) => ({ templates: [...state.templates, { ...template, id: crypto.randomUUID(), custom: true }] })),
+
+      deleteTemplate: (id) =>
+        set((state) => ({ templates: state.templates.filter(t => t.id !== id) })),
+
       getWorkoutHistory: () =>
         Object.values(get().workouts).sort((a, b) =>
           b.date.localeCompare(a.date)
