@@ -1,12 +1,8 @@
 import { useState } from 'react'
-import { Zap } from 'lucide-react'
 import { useFoodStore } from '../stores/foodStore'
 import { useConfigStore } from '../stores/configStore'
 import { useWorkoutStore } from '../stores/workoutStore'
-import { useMealPlanStore } from '../stores/mealPlanStore'
-import { calcRemaining } from '../utils/macroCalc'
 import { getToday } from '../utils/dateUtils'
-import { getWeekDelta, getFutureDaysCount } from '../utils/mealPlanner'
 import Header from '../components/layout/Header'
 import DailyProgress from '../components/dashboard/DailyProgress'
 import QuickAdd from '../components/dashboard/QuickAdd'
@@ -24,46 +20,17 @@ export default function Today({ onNavigate }) {
   const { getTodayTotals, getTodayLog, addMeal, removeMeal } = useFoodStore()
   const { targets, userInfo } = useConfigStore()
   const { workouts, templates, loadTemplate, startWorkout } = useWorkoutStore()
-  const { plan } = useMealPlanStore()
 
   const totals     = getTodayTotals()
   const todayLog   = getTodayLog()
   const today      = getToday()
   const todayWorkout = workouts[today]
 
-  // Recalibration banner
-  const delta      = getWeekDelta(plan)
-  const futureDays = getFutureDaysCount(plan)
-  const hasCalDelta = plan && Math.abs(delta.calories) > 50
-
-  // Adjusted today target (from plan if available)
-  const todayTarget = plan?.adjustedTargets?.[today] ?? targets
-
   return (
     <div>
       <Header currentPage="today" userName={userInfo.name} onNavigate={onNavigate} />
 
-      {/* Recalibration banner */}
-      {hasCalDelta && (
-        <div className="mx-4 mb-3 bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-4 py-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Zap size={14} className="text-accent-blue" />
-            <p className="text-accent-blue text-xs font-semibold">Piano ricalibrato</p>
-          </div>
-          <p className="text-text-muted text-xs">
-            Hai accumulato {delta.calories > 0 ? '+' : ''}{Math.round(delta.calories)} kcal questa settimana.
-            {futureDays > 0 && ` I prossimi ${futureDays} giorni: ${todayTarget.calories} kcal/giorno.`}
-          </p>
-          <button
-            onClick={() => onNavigate('plan')}
-            className="mt-1.5 text-accent-blue text-xs font-medium"
-          >
-            Vedi piano →
-          </button>
-        </div>
-      )}
-
-      <DailyProgress totals={totals} targets={todayTarget} />
+      <DailyProgress totals={totals} targets={targets} />
       <QuickAdd
         onAddMeal={() => setShowMealModal(true)}
         onPhotoMeal={() => setShowCamera(true)}
@@ -99,30 +66,6 @@ export default function Today({ onNavigate }) {
               </p>
             </div>
           </button>
-        </div>
-      )}
-
-      {/* Today's plan preview */}
-      {plan?.days?.[today] && (
-        <div className="px-4 mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-text-muted text-xs uppercase tracking-wider">Piano di oggi</p>
-            <button onClick={() => onNavigate('plan')} className="text-accent-blue text-xs">Vedi piano</button>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {['breakfast','lunch','snack','dinner'].map((cat) => {
-              const meal = plan.days[today].meals[cat]
-              if (!meal) return null
-              const labels = { breakfast: 'Colazione', lunch: 'Pranzo', snack: 'Spuntino', dinner: 'Cena' }
-              return (
-                <div key={cat} className={`rounded-xl px-3 py-2 ${meal.eaten ? 'bg-accent-green/10 border border-accent-green/20' : 'bg-surface'}`}>
-                  <p className="text-text-dim text-[10px]">{labels[cat]}</p>
-                  <p className="text-text text-xs font-medium truncate">{meal.name}</p>
-                  <p className="text-accent-red text-[10px]">{meal.calories} kcal</p>
-                </div>
-              )
-            })}
-          </div>
         </div>
       )}
 
