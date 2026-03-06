@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { X, ChevronDown, ChevronUp, Loader } from 'lucide-react'
-import { searchExercise } from '../../services/exercisedb'
+import { searchExercise, fetchGifBlob } from '../../services/exercisedb'
 
 export default function ExerciseGifModal({ exerciseName, onClose }) {
   const [data, setData]       = useState(null)
+  const [gifSrc, setGifSrc]   = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
   const [showSteps, setShowSteps] = useState(false)
@@ -12,12 +13,14 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setGifSrc(null)
     searchExercise(exerciseName)
-      .then(result => {
-        if (!cancelled) {
-          if (result) setData(result)
-          else setError('Esercizio non trovato nel database')
-        }
+      .then(async result => {
+        if (cancelled) return
+        if (!result) { setError('Esercizio non trovato nel database'); return }
+        setData(result)
+        const blobUrl = await fetchGifBlob(result.gifUrl)
+        if (!cancelled) setGifSrc(blobUrl)
       })
       .catch(err => { if (!cancelled) setError(err.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -65,12 +68,16 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
           {data && !loading && (
             <>
               {/* GIF */}
-              <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center">
-                <img
-                  src={data.gifUrl}
-                  alt={data.name}
-                  className="h-52 object-contain"
-                />
+              <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center" style={{minHeight: '208px'}}>
+                {gifSrc ? (
+                  <img
+                    src={gifSrc}
+                    alt={data.name}
+                    className="h-52 object-contain"
+                  />
+                ) : (
+                  <Loader size={24} className="text-accent-blue animate-spin" />
+                )}
               </div>
 
               {/* Muscles */}
