@@ -17,8 +17,15 @@ function getDefaultCat() {
   return 'cena'
 }
 
-function getRemainingSlots(hour) {
-  return Math.max(1, [hour < 10, hour < 14, hour < 18, true].filter(Boolean).length)
+const MEAL_PROPORTIONS = { colazione: 0.20, pranzo: 0.35, spuntino: 0.15, cena: 0.30 }
+const MEAL_CUTOFFS     = { colazione: 10,   pranzo: 14,   spuntino: 18,   cena: Infinity }
+
+function getMealBudget(remainingCal, category, hour) {
+  const remainingProportion = CATS.reduce((sum, cat) => {
+    return hour < MEAL_CUTOFFS[cat] ? sum + MEAL_PROPORTIONS[cat] : sum
+  }, 0) || 1
+  const share = MEAL_PROPORTIONS[category] / remainingProportion
+  return Math.max(100, remainingCal * share)
 }
 
 function pickMeal(library, category, remainingCal, excludeId = null) {
@@ -60,8 +67,7 @@ export default function Plan() {
   const library = mealLibrary.filter(m => !bannedMeals.includes(m.id))
 
   const hour = new Date().getHours()
-  const slots = getRemainingSlots(hour)
-  const mealBudget = Math.max(100, remaining.calories / slots)
+  const mealBudget = getMealBudget(remaining.calories, category, hour)
 
   const suggestion = useMemo(
     () => pickMeal(library, category, mealBudget),

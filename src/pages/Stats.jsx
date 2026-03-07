@@ -68,7 +68,7 @@ export default function Stats() {
   // Chart data: daily for 7/30d, monthly aggregated for 365d
   const chartData = useMemo(() => {
     if (period !== '365d') {
-      return allDays.map((date) => ({ date: date.slice(5), ...getTotalsForDate(date) }))
+      return allDays.map((date) => ({ date, ...getTotalsForDate(date) }))
     }
     // Group by month
     const byMonth = {}
@@ -82,7 +82,7 @@ export default function Stats() {
         const t = getTotalsForDate(d)
         return { calories: acc.calories+t.calories, protein: acc.protein+t.protein, carbs: acc.carbs+t.carbs, fat: acc.fat+t.fat }
       }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
-      return { date: key.slice(5), ...tot }
+      return { date: key + '-01', ...tot }
     })
   }, [period, allDays, foodLog])
 
