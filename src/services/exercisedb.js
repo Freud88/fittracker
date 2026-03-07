@@ -96,6 +96,7 @@ export async function searchExercise(name) {
     secondaryMuscles: best.secondaryMuscles || [],
     instructions:     best.instructions || [],
     gifUrl:           best.images?.[0] ? `${GIF_BASE}/${best.images[0]}` : null,
+    gifUrl2:          best.images?.[1] ? `${GIF_BASE}/${best.images[1]}` : null,
   }
   cache[term] = result
   return result

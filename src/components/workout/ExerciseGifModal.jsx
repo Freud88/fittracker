@@ -3,10 +3,11 @@ import { X, ChevronDown, ChevronUp, Loader } from 'lucide-react'
 import { searchExercise } from '../../services/exercisedb'
 
 export default function ExerciseGifModal({ exerciseName, onClose }) {
-  const [data, setData]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [data, setData]         = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(null)
   const [gifError, setGifError] = useState(false)
+  const [frame, setFrame]       = useState(0)
   const [showSteps, setShowSteps] = useState(false)
 
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
     setLoading(true)
     setError(null)
     setGifError(false)
+    setFrame(0)
     searchExercise(exerciseName)
       .then(result => {
         if (cancelled) return
@@ -24,6 +26,13 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [exerciseName])
+
+  // Animate between frame 0 and frame 1
+  useEffect(() => {
+    if (!data?.gifUrl2) return
+    const id = setInterval(() => setFrame(f => 1 - f), 800)
+    return () => clearInterval(id)
+  }, [data?.gifUrl2])
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end" onClick={onClose}>
@@ -65,17 +74,32 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
 
           {data && !loading && (
             <>
-              {/* GIF */}
-              <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center" style={{minHeight: '208px'}}>
+              {/* Animated frames */}
+              <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center relative" style={{minHeight: '208px'}}>
                 {gifError ? (
-                  <p className="text-text-dim text-xs">Animazione non disponibile</p>
+                  <p className="text-text-dim text-xs">Illustrazione non disponibile</p>
+                ) : data.gifUrl ? (
+                  <>
+                    <img
+                      src={data.gifUrl}
+                      alt={data.name}
+                      className="h-52 object-contain absolute"
+                      style={{ opacity: frame === 0 ? 1 : 0, transition: 'opacity 0.1s' }}
+                      onError={() => setGifError(true)}
+                    />
+                    {data.gifUrl2 && (
+                      <img
+                        src={data.gifUrl2}
+                        alt=""
+                        className="h-52 object-contain absolute"
+                        style={{ opacity: frame === 1 ? 1 : 0, transition: 'opacity 0.1s' }}
+                      />
+                    )}
+                    {/* spacer to maintain height */}
+                    <div className="h-52 w-full" />
+                  </>
                 ) : (
-                  <img
-                    src={data.gifUrl}
-                    alt={data.name}
-                    className="h-52 object-contain"
-                    onError={() => setGifError(true)}
-                  />
+                  <p className="text-text-dim text-xs">Illustrazione non disponibile</p>
                 )}
               </div>
 
