@@ -6,15 +6,17 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
-  const [gifError, setGifError] = useState(false)
-  const [frame, setFrame]       = useState(0)
+  const [videoError, setVideoError] = useState(false)
+  const [imgError, setImgError]     = useState(false)
+  const [frame, setFrame]           = useState(0)
   const [showSteps, setShowSteps] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    setGifError(false)
+    setVideoError(false)
+    setImgError(false)
     setFrame(0)
     searchExercise(exerciseName)
       .then(result => {
@@ -27,12 +29,12 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
     return () => { cancelled = true }
   }, [exerciseName])
 
-  // Animate between frame 0 and frame 1 (fallback when no video)
+  // Animate frames when video not available or failed
   useEffect(() => {
-    if (!data?.gifUrl2 || data?.videoUrl) return
+    if (!data?.gifUrl2 || (data?.videoUrl && !videoError)) return
     const id = setInterval(() => setFrame(f => 1 - f), 800)
     return () => clearInterval(id)
-  }, [data?.gifUrl2, data?.videoUrl])
+  }, [data?.gifUrl2, data?.videoUrl, videoError])
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end" onClick={onClose}>
@@ -76,17 +78,16 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
             <>
               {/* Video / animated frames */}
               <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center relative" style={{minHeight: '208px'}}>
-                {gifError ? (
-                  <p className="text-text-dim text-xs">Illustrazione non disponibile</p>
-                ) : data.videoUrl ? (
+                {!videoError && data.videoUrl ? (
                   <video
                     key={data.videoUrl}
+                    src={data.videoUrl}
                     autoPlay loop muted playsInline
                     className="h-52 object-contain"
-                    onError={() => setGifError(true)}
-                  >
-                    <source src={data.videoUrl} type="video/mp4" />
-                  </video>
+                    onError={() => setVideoError(true)}
+                  />
+                ) : imgError || (!data.gifUrl && !data.videoUrl) ? (
+                  <p className="text-text-dim text-xs">Illustrazione non disponibile</p>
                 ) : data.gifUrl ? (
                   <>
                     <img
@@ -94,7 +95,7 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
                       alt={data.name}
                       className="h-52 object-contain absolute"
                       style={{ opacity: frame === 0 ? 1 : 0, transition: 'opacity 0.1s' }}
-                      onError={() => setGifError(true)}
+                      onError={() => setImgError(true)}
                     />
                     {data.gifUrl2 && (
                       <img
