@@ -27,12 +27,12 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
     return () => { cancelled = true }
   }, [exerciseName])
 
-  // Animate between frame 0 and frame 1
+  // Animate between frame 0 and frame 1 (fallback when no video)
   useEffect(() => {
-    if (!data?.gifUrl2) return
+    if (!data?.gifUrl2 || data?.videoUrl) return
     const id = setInterval(() => setFrame(f => 1 - f), 800)
     return () => clearInterval(id)
-  }, [data?.gifUrl2])
+  }, [data?.gifUrl2, data?.videoUrl])
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end" onClick={onClose}>
@@ -74,10 +74,19 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
 
           {data && !loading && (
             <>
-              {/* Animated frames */}
+              {/* Video / animated frames */}
               <div className="bg-black rounded-xl overflow-hidden mb-4 flex justify-center items-center relative" style={{minHeight: '208px'}}>
                 {gifError ? (
                   <p className="text-text-dim text-xs">Illustrazione non disponibile</p>
+                ) : data.videoUrl ? (
+                  <video
+                    key={data.videoUrl}
+                    autoPlay loop muted playsInline
+                    className="h-52 object-contain"
+                    onError={() => setGifError(true)}
+                  >
+                    <source src={data.videoUrl} type="video/mp4" />
+                  </video>
                 ) : data.gifUrl ? (
                   <>
                     <img
@@ -95,7 +104,6 @@ export default function ExerciseGifModal({ exerciseName, onClose }) {
                         style={{ opacity: frame === 1 ? 1 : 0, transition: 'opacity 0.1s' }}
                       />
                     )}
-                    {/* spacer to maintain height */}
                     <div className="h-52 w-full" />
                   </>
                 ) : (
