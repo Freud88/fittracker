@@ -17,6 +17,10 @@ function getDefaultCat() {
   return 'cena'
 }
 
+function getRemainingSlots(hour) {
+  return Math.max(1, [hour < 10, hour < 14, hour < 18, true].filter(Boolean).length)
+}
+
 function pickMeal(library, category, remainingCal, excludeId = null) {
   const pool = library.filter(m => m.category === CAT_MAP[category] && m.id !== excludeId)
   if (pool.length === 0) return null
@@ -55,10 +59,14 @@ export default function Plan() {
 
   const library = mealLibrary.filter(m => !bannedMeals.includes(m.id))
 
+  const hour = new Date().getHours()
+  const slots = getRemainingSlots(hour)
+  const mealBudget = Math.max(100, remaining.calories / slots)
+
   const suggestion = useMemo(
-    () => pickMeal(library, category, remaining.calories),
+    () => pickMeal(library, category, mealBudget),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [category, seed]
+    [category, seed, mealBudget]
   )
 
   function handleEaten() {

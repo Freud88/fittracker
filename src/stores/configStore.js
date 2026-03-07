@@ -14,6 +14,8 @@ const defaultConfig = {
     height: 170,
     age: 25,
     name: '',
+    sex: 'male',
+    activityLevel: 'moderate',
   },
 }
 

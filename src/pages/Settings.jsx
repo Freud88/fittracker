@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft, LogOut } from 'lucide-react'
+import { Save, Download, Upload, Trash2, Ban, Plus, ChevronLeft, LogOut, Calculator } from 'lucide-react'
 import { supabase, isSupabaseReady } from '../services/supabase'
 import { forceSyncToCloud } from '../utils/syncStorage'
 import { useConfigStore } from '../stores/configStore'
@@ -28,6 +28,19 @@ export default function Settings({ session, onNavigate }) {
 
   const bannedItems  = mealLibrary.filter((m) => bannedMeals.includes(m.id))
   const customMeals  = mealLibrary.filter((m) => m.custom)
+
+  function handleEstimateTargets() {
+    const { weight, height, age, sex, activityLevel } = localUser
+    if (!weight || !height || !age) return
+    const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 }
+    const sexOffset = (sex || 'male') === 'male' ? 5 : -161
+    const bmr = 10 * weight + 6.25 * height - 5 * age + sexOffset
+    const tdee = Math.round(bmr * (multipliers[activityLevel] || 1.55))
+    const protein = Math.round(weight * 2)
+    const fat = Math.round(tdee * 0.25 / 9)
+    const carbs = Math.round((tdee - protein * 4 - fat * 9) / 4)
+    setLocalTargets({ calories: tdee, protein, carbs, fat })
+  }
 
   function handleSave() {
     updateTargets(localTargets)
@@ -104,6 +117,38 @@ export default function Settings({ session, onNavigate }) {
                 />
               </div>
             ))}
+            <div className="bg-surface2 rounded-xl px-4 py-3 flex justify-between items-center">
+              <label className="text-text-muted text-sm">Sesso</label>
+              <select
+                value={localUser.sex || 'male'}
+                onChange={(e) => setLocalUser({ ...localUser, sex: e.target.value })}
+                className="bg-transparent text-text text-right outline-none font-medium"
+              >
+                <option value="male">Maschio</option>
+                <option value="female">Femmina</option>
+              </select>
+            </div>
+            <div className="bg-surface2 rounded-xl px-4 py-3 flex justify-between items-center">
+              <label className="text-text-muted text-sm">Attività fisica</label>
+              <select
+                value={localUser.activityLevel || 'moderate'}
+                onChange={(e) => setLocalUser({ ...localUser, activityLevel: e.target.value })}
+                className="bg-transparent text-text text-right outline-none font-medium"
+              >
+                <option value="sedentary">Sedentario</option>
+                <option value="light">Leggero</option>
+                <option value="moderate">Moderato</option>
+                <option value="active">Attivo</option>
+                <option value="very_active">Molto attivo</option>
+              </select>
+            </div>
+            <button
+              onClick={handleEstimateTargets}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-surface2 text-text-muted text-sm border border-border active:bg-surface"
+            >
+              <Calculator size={15} className="text-accent-blue" />
+              Stima target dai dati biometrici
+            </button>
           </div>
         </div>
 

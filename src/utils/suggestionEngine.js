@@ -24,17 +24,21 @@ function calcScore(meal, remaining) {
   return proteinScore + carbScore + calScore
 }
 
-export function getSuggestions(remaining, hour = new Date().getHours()) {
+export function getSuggestions(remaining, hour = new Date().getHours(), page = 0) {
   const timeSlot = getTimeSlot(hour)
   const maxCal = remaining.calories * 1.1
 
-  return MEAL_SUGGESTIONS
+  const all = MEAL_SUGGESTIONS
     .filter(meal => remaining.calories <= 0 || meal.calories <= maxCal)
     .filter(meal => isTimeAppropriate(meal, timeSlot))
-    .map(meal => ({
-      ...meal,
-      score: calcScore(meal, remaining)
-    }))
+    .map(meal => ({ ...meal, score: calcScore(meal, remaining) }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
+
+  if (all.length === 0) return []
+  const count = Math.min(3, all.length)
+  const result = []
+  for (let i = 0; i < count; i++) {
+    result.push(all[(page * 3 + i) % all.length])
+  }
+  return result
 }
