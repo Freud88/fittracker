@@ -106,6 +106,13 @@ export const useWorkoutStore = create(
           return { workouts, activeWorkoutDate: null }
         }),
 
+      deleteWorkout: (date) =>
+        set((state) => {
+          const workouts = { ...state.workouts }
+          delete workouts[date]
+          return { workouts }
+        }),
+
       updateWorkoutNotes: (date, notes) =>
         set((state) => ({
           workouts: {

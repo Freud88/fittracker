@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, CheckCircle, Clock, FileDown } from 'lucide-react'
+import { ChevronDown, ChevronUp, CheckCircle, Clock, FileDown, Trash2 } from 'lucide-react'
 import { formatDate } from '../../utils/dateUtils'
+import { useWorkoutStore } from '../../stores/workoutStore'
 
 function getDuration(workout) {
   if (!workout.startTime || !workout.endTime) return null
@@ -94,6 +95,8 @@ function exportPDF(workout) {
 
 function WorkoutCard({ workout }) {
   const [expanded, setExpanded] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const deleteWorkout = useWorkoutStore(s => s.deleteWorkout)
   const totalSets = workout.exercises.reduce((a, ex) => a + ex.sets.length, 0)
   const completedSets = workout.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.completed).length, 0)
   const duration = getDuration(workout)
@@ -131,6 +134,30 @@ function WorkoutCard({ workout }) {
           >
             <FileDown size={15} />
           </button>
+          {confirmDelete ? (
+            <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => deleteWorkout(workout.date)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md bg-red-500/20 text-red-400 active:bg-red-500/40"
+              >
+                Elimina
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md bg-surface2 text-text-muted"
+              >
+                Annulla
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={e => { e.stopPropagation(); setConfirmDelete(true) }}
+              className="p-1.5 text-text-muted active:text-red-400 rounded-lg active:bg-surface2"
+              title="Elimina allenamento"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
           {expanded ? <ChevronUp size={15} className="text-text-muted" /> : <ChevronDown size={15} className="text-text-muted" />}
         </div>
       </button>
