@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Share2, Check } from 'lucide-react'
 import { useFoodStore } from '../../stores/foodStore'
 import { getToday, formatDate, formatDateShort } from '../../utils/dateUtils'
 
@@ -43,6 +43,7 @@ export default function FoodReport() {
   const today = getToday()
   const [mode, setMode] = useState('week')
   const [anchor, setAnchor] = useState(today)
+  const [copied, setCopied] = useState(false)
 
   const { getLogForDate, getTotalsForDate } = useFoodStore()
 
@@ -82,6 +83,33 @@ export default function FoodReport() {
 
   const visibleDates = dates.filter(d => d <= today)
 
+  function buildExportText() {
+    const title = `📊 Report alimentare — ${label}\n${'─'.repeat(32)}\n`
+    const body = visibleDates.map(date => {
+      const meals = getLogForDate(date)
+      const totals = getTotalsForDate(date)
+      const header = `📅 ${formatDate(date).charAt(0).toUpperCase() + formatDate(date).slice(1)}`
+      if (meals.length === 0) return `${header}\n   Nessun pasto registrato`
+      const mealLines = meals.map(m =>
+        `   • ${m.name} (${m.category}) — ${Math.round(m.calories)} kcal | P${Math.round(m.protein)}·C${Math.round(m.carbs)}·G${Math.round(m.fat)}`
+      ).join('\n')
+      const footer = `   Totale: ${Math.round(totals.calories)} kcal | Prot ${Math.round(totals.protein)}g · Carb ${Math.round(totals.carbs)}g · Grassi ${Math.round(totals.fat)}g`
+      return `${header}\n${mealLines}\n${footer}`
+    }).join('\n\n')
+    return title + body
+  }
+
+  async function handleExport() {
+    const text = buildExportText()
+    if (navigator.share) {
+      await navigator.share({ title: `Report alimentare — ${label}`, text })
+    } else {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {/* Mode selector */}
@@ -107,6 +135,16 @@ export default function FoodReport() {
           <ChevronRight size={18} />
         </button>
       </div>
+
+      {/* Export button */}
+      <button onClick={handleExport}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface border border-border text-text-muted text-xs font-medium active:bg-surface2 transition-colors"
+      >
+        {copied
+          ? <><Check size={14} className="text-accent-green" /> Copiato negli appunti!</>
+          : <><Share2 size={14} /> Esporta / Condividi</>
+        }
+      </button>
 
       {/* Day cards */}
       {visibleDates.length === 0 && (
