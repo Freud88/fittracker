@@ -39,7 +39,7 @@ export default function Settings({ session, onNavigate }) {
     const protein = Math.round(weight * 2)
     const fat = Math.round(tdee * 0.25 / 9)
     const carbs = Math.round((tdee - protein * 4 - fat * 9) / 4)
-    setLocalTargets({ calories: tdee, protein, carbs, fat })
+    setLocalTargets({ ...localTargets, calories: tdee, protein, carbs, fat, maintenanceCalories: tdee })
   }
 
   function handleSave() {

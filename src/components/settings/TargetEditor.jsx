@@ -1,9 +1,10 @@
 export default function TargetEditor({ targets, onChange }) {
   const fields = [
-    { key: 'calories', label: 'Calorie giornaliere', unit: 'kcal', step: 50 },
-    { key: 'protein', label: 'Proteine', unit: 'g', step: 5 },
-    { key: 'carbs', label: 'Carboidrati', unit: 'g', step: 5 },
-    { key: 'fat', label: 'Grassi', unit: 'g', step: 5 },
+    { key: 'calories',            label: 'Calorie giornaliere (target)', unit: 'kcal', step: 50 },
+    { key: 'maintenanceCalories', label: 'Calorie mantenimento (TDEE)',  unit: 'kcal', step: 50 },
+    { key: 'protein', label: 'Proteine',     unit: 'g', step: 5 },
+    { key: 'carbs',   label: 'Carboidrati',  unit: 'g', step: 5 },
+    { key: 'fat',     label: 'Grassi',       unit: 'g', step: 5 },
   ]
 
   return (

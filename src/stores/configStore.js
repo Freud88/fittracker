@@ -8,6 +8,7 @@ const defaultConfig = {
     protein: 165,
     carbs: 280,
     fat: 80,
+    maintenanceCalories: 0,
   },
   userInfo: {
     weight: 70,

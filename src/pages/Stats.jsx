@@ -96,6 +96,8 @@ export default function Stats() {
   const avgProt = periodTotals.protein  / periodDays
   const targetCal = targets.calories * periodDays
   const deficit = targetCal - periodTotals.calories // positivo = deficit, negativo = surplus
+  const maintenance = targets.maintenanceCalories || 0
+  const realDeficit = maintenance > 0 ? maintenance * periodDays - periodTotals.calories : null
 
   const last30 = getLast30Days()
   const workoutDays30 = last30.filter((d) => !!workouts[d]).length
@@ -173,6 +175,21 @@ export default function Stats() {
               <p className="text-text-dim text-[10px]">kcal · {deficit >= 0 ? '−' : '+'}{Math.round(Math.abs(deficit / periodDays))}/gg</p>
             </div>
           </div>
+
+          {realDeficit !== null && (
+            <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
+              <div>
+                <p className="text-text-dim text-[10px]">Deficit reale dal mantenimento</p>
+                <p className="text-text-dim text-[10px]">TDEE {maintenance} kcal/gg</p>
+              </div>
+              <div className="text-right">
+                <p className={`font-bold text-base ${realDeficit >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                  {realDeficit >= 0 ? '−' : '+'}{Math.round(Math.abs(realDeficit))} kcal
+                </p>
+                <p className="text-text-dim text-[10px]">{realDeficit >= 0 ? '−' : '+'}{Math.round(Math.abs(realDeficit / periodDays))} kcal/gg</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <ProgressChart data={chartData} title={`Calorie — ${PERIODS.find(p=>p.id===period)?.label.toLowerCase()}`}
