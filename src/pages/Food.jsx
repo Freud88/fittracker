@@ -10,8 +10,9 @@ import AddMealModal from '../components/food/AddMealModal'
 import PhotoMealCapture from '../components/food/PhotoMealCapture'
 import MacroSummary from '../components/food/MacroSummary'
 import MealSuggestions from '../components/suggestions/MealSuggestions'
+import FoodReport from '../components/food/FoodReport'
 
-const TABS = ['Diario', 'Suggerimenti']
+const TABS = ['Diario', 'Suggerimenti', 'Report']
 
 function offsetDate(dateStr, days) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -130,6 +131,8 @@ export default function Food() {
         {activeTab === 'Suggerimenti' && (
           <MealSuggestions remaining={remaining} onAdd={handleAddSuggestion} />
         )}
+
+        {activeTab === 'Report' && <FoodReport />}
       </div>
 
       {showModal && (
