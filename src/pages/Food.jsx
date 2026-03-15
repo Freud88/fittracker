@@ -34,8 +34,11 @@ export default function Food() {
   const totals = getTotalsForDate(selectedDate)
   const remaining = calcRemaining(targets, totals)
 
-  function goBack() { setSelectedDate(d => offsetDate(d, -1)) }
-  function goForward() { if (!isToday) setSelectedDate(d => offsetDate(d, 1)) }
+  function goBack() { setSelectedDate(offsetDate(selectedDate, -1)) }
+  function goForward() {
+    const next = offsetDate(selectedDate, 1)
+    if (next <= today) setSelectedDate(next)
+  }
 
   function handleAddSuggestion(suggestion) {
     const meal = {
