@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { Plus, Camera } from 'lucide-react'
+import { Plus, Camera, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useFoodStore } from '../stores/foodStore'
 import { useConfigStore } from '../stores/configStore'
 import { calcRemaining } from '../utils/macroCalc'
-import { getToday } from '../utils/dateUtils'
-import { getCurrentTime } from '../utils/dateUtils'
+import { getToday, formatDate, getCurrentTime } from '../utils/dateUtils'
 import Header from '../components/layout/Header'
 import FoodLog from '../components/food/FoodLog'
 import AddMealModal from '../components/food/AddMealModal'
@@ -14,18 +13,29 @@ import MealSuggestions from '../components/suggestions/MealSuggestions'
 
 const TABS = ['Diario', 'Suggerimenti']
 
+function offsetDate(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]
+}
+
 export default function Food() {
   const [activeTab, setActiveTab] = useState('Diario')
   const [showModal, setShowModal] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(getToday())
 
-  const { getTodayLog, getTodayTotals, addMeal, removeMeal } = useFoodStore()
+  const { getLogForDate, getTotalsForDate, addMeal, removeMeal } = useFoodStore()
   const { targets } = useConfigStore()
 
   const today = getToday()
-  const meals = getTodayLog()
-  const totals = getTodayTotals()
+  const isToday = selectedDate === today
+  const meals = getLogForDate(selectedDate)
+  const totals = getTotalsForDate(selectedDate)
   const remaining = calcRemaining(targets, totals)
+
+  function goBack() { setSelectedDate(d => offsetDate(d, -1)) }
+  function goForward() { if (!isToday) setSelectedDate(d => offsetDate(d, 1)) }
 
   function handleAddSuggestion(suggestion) {
     const meal = {
@@ -40,13 +50,31 @@ export default function Food() {
       carbs: suggestion.carbs,
       fat: suggestion.fat,
     }
-    addMeal(today, meal)
+    addMeal(selectedDate, meal)
     setActiveTab('Diario')
   }
 
   return (
     <div>
       <Header currentPage="food" />
+
+      {/* Date navigator */}
+      <div className="flex items-center justify-between px-4 mb-3">
+        <button onClick={goBack} className="p-1.5 rounded-lg bg-surface text-text-muted active:bg-surface2">
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          onClick={() => setSelectedDate(today)}
+          className="flex-1 text-center text-sm font-medium text-text capitalize mx-2"
+        >
+          {isToday ? 'Oggi' : formatDate(selectedDate)}
+        </button>
+        <button onClick={goForward} disabled={isToday}
+          className="p-1.5 rounded-lg bg-surface text-text-muted active:bg-surface2 disabled:opacity-30"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
 
       {/* Macro summary bar */}
       <div className="px-4 mb-4">
@@ -89,7 +117,7 @@ export default function Food() {
             >
               <Camera size={18} className="text-accent-red" /> Fotografa il pasto
             </button>
-            <FoodLog meals={meals} onRemove={(id) => removeMeal(today, id)} />
+            <FoodLog meals={meals} onRemove={(id) => removeMeal(selectedDate, id)} />
           </>
         )}
 
@@ -101,6 +129,7 @@ export default function Food() {
       {showModal && (
         <AddMealModal
           onAdd={addMeal}
+          date={selectedDate}
           onClose={() => setShowModal(false)}
         />
       )}
@@ -108,7 +137,7 @@ export default function Food() {
       {showCamera && (
         <PhotoMealCapture
           onConfirm={(meal) => {
-            addMeal(today, {
+            addMeal(selectedDate, {
               id: crypto.randomUUID(),
               time: getCurrentTime(),
               category: 'pranzo',

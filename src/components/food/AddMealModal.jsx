@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { X, Plus, Camera, Sparkles, RefreshCw } from 'lucide-react'
 import PhotoMealCapture from './PhotoMealCapture'
-import { getCurrentTime, getToday } from '../../utils/dateUtils'
+import { getCurrentTime } from '../../utils/dateUtils'
 import { parseMealFromText } from '../../services/foodTextParser'
 
 const categories = ['colazione', 'pranzo', 'cena', 'spuntino', 'post-workout']
 
-export default function AddMealModal({ onAdd, onClose }) {
+export default function AddMealModal({ onAdd, onClose, date }) {
   const [category, setCategory]     = useState('pranzo')
   const [time, setTime]             = useState(getCurrentTime())
   const [showCamera, setShowCamera] = useState(false)
@@ -32,7 +32,7 @@ export default function AddMealModal({ onAdd, onClose }) {
 
   function handleAdd() {
     if (!aiResult) return
-    onAdd(getToday(), {
+    onAdd(date, {
       id: crypto.randomUUID(), time, category,
       name: aiResult.name, quantity: 1, unit: 'porzione',
       calories: Number(aiResult.calories) || 0,
@@ -44,7 +44,7 @@ export default function AddMealModal({ onAdd, onClose }) {
   }
 
   function handlePhotoConfirm(meal) {
-    onAdd(getToday(), { id: crypto.randomUUID(), time, category, quantity: 1, unit: 'porzione', ...meal })
+    onAdd(date, { id: crypto.randomUUID(), time, category, quantity: 1, unit: 'porzione', ...meal })
     onClose()
   }
 
