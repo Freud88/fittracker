@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Share2, Check } from 'lucide-react'
 import { useFoodStore } from '../../stores/foodStore'
+import { useConfigStore } from '../../stores/configStore'
 import { getToday, formatDate, formatDateShort } from '../../utils/dateUtils'
 
 function localStr(d) {
@@ -46,6 +47,8 @@ export default function FoodReport() {
   const [copied, setCopied] = useState(false)
 
   const { getLogForDate, getTotalsForDate } = useFoodStore()
+  const { targets } = useConfigStore()
+  const maintenance = targets.maintenanceCalories || 0
 
   // Build dates array and label
   let dates = []
@@ -83,8 +86,26 @@ export default function FoodReport() {
 
   const visibleDates = dates.filter(d => d <= today)
 
+  // Period summary
+  const trackedDays = visibleDates.filter(d => getLogForDate(d).length > 0)
+  const periodTotals = trackedDays.reduce((acc, d) => {
+    const t = getTotalsForDate(d)
+    return { calories: acc.calories + t.calories, protein: acc.protein + t.protein, carbs: acc.carbs + t.carbs, fat: acc.fat + t.fat }
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+  const n = trackedDays.length || 1
+  const avg = { calories: periodTotals.calories / n, protein: periodTotals.protein / n, carbs: periodTotals.carbs / n, fat: periodTotals.fat / n }
+  const deficitPerDay = maintenance > 0 ? maintenance - avg.calories : null
+
   function buildExportText() {
-    const title = `📊 Report alimentare — ${label}\n${'─'.repeat(32)}\n`
+    const defLine = deficitPerDay !== null
+      ? `   Deficit medio vs TDEE (${maintenance} kcal): ${deficitPerDay >= 0 ? '−' : '+'}${Math.round(Math.abs(deficitPerDay))} kcal/gg\n`
+      : ''
+    const summary =
+      `📈 Riepilogo (${trackedDays.length} giorni tracciati)\n` +
+      `   Media kcal: ${Math.round(avg.calories)} | Prot: ${Math.round(avg.protein)}g · Carb: ${Math.round(avg.carbs)}g · Grassi: ${Math.round(avg.fat)}g\n` +
+      defLine +
+      `${'─'.repeat(32)}\n`
+    const title = `📊 Report alimentare — ${label}\n${summary}`
     const body = visibleDates.map(date => {
       const meals = getLogForDate(date)
       const totals = getTotalsForDate(date)
@@ -135,6 +156,36 @@ export default function FoodReport() {
           <ChevronRight size={18} />
         </button>
       </div>
+
+      {/* Period summary card */}
+      {trackedDays.length > 0 && (
+        <div className="bg-surface rounded-xl p-3 space-y-2">
+          <p className="text-text-muted text-[10px] uppercase tracking-wider">
+            Riepilogo · {trackedDays.length} {trackedDays.length === 1 ? 'giorno tracciato' : 'giorni tracciati'}
+          </p>
+          <div className="grid grid-cols-4 gap-1 text-center">
+            {[
+              { label: 'Media kcal', value: Math.round(avg.calories), color: 'text-accent-red' },
+              { label: 'Prot media', value: `${Math.round(avg.protein)}g`, color: 'text-accent-blue' },
+              { label: 'Carb media', value: `${Math.round(avg.carbs)}g`, color: 'text-accent-gold' },
+              { label: 'Grassi med', value: `${Math.round(avg.fat)}g`, color: 'text-accent-green' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="bg-surface2 rounded-lg py-2 px-1">
+                <p className={`text-sm font-bold ${color}`}>{value}</p>
+                <p className="text-[9px] text-text-dim leading-tight mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+          {deficitPerDay !== null && (
+            <div className={`flex justify-between items-center px-3 py-2 rounded-lg ${deficitPerDay >= 0 ? 'bg-accent-green/10' : 'bg-accent-red/10'}`}>
+              <span className="text-[10px] text-text-muted">Deficit medio vs TDEE ({maintenance} kcal/gg)</span>
+              <span className={`text-sm font-bold ${deficitPerDay >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                {deficitPerDay >= 0 ? '−' : '+'}{Math.round(Math.abs(deficitPerDay))} kcal/gg
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Export button */}
       <button onClick={handleExport}
