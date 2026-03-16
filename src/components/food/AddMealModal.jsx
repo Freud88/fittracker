@@ -52,8 +52,8 @@ export default function AddMealModal({ onAdd, onClose, date: dateProp }) {
   return (
     <>
       {showCamera && <PhotoMealCapture onConfirm={handlePhotoConfirm} onClose={() => setShowCamera(false)} />}
-      <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
-        <div className="w-full bg-surface rounded-t-2xl p-4 pb-12 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 z-50 flex items-end">
+        <div className="w-full bg-surface rounded-t-2xl p-4 pb-12 max-h-[90vh] overflow-y-auto">
           <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />
 
           <div className="flex justify-between items-center mb-4">
