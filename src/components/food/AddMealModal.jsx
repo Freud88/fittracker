@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { X, Plus, Camera, Sparkles, RefreshCw } from 'lucide-react'
 import PhotoMealCapture from './PhotoMealCapture'
-import { getCurrentTime } from '../../utils/dateUtils'
+import { getCurrentTime, getToday, formatDate } from '../../utils/dateUtils'
 import { parseMealFromText } from '../../services/foodTextParser'
 
 const categories = ['colazione', 'pranzo', 'cena', 'spuntino', 'post-workout']
 
-export default function AddMealModal({ onAdd, onClose, date }) {
+export default function AddMealModal({ onAdd, onClose, date: dateProp }) {
+  const date = dateProp || getToday()
   const [category, setCategory]     = useState('pranzo')
   const [time, setTime]             = useState(getCurrentTime())
   const [showCamera, setShowCamera] = useState(false)
@@ -56,7 +57,12 @@ export default function AddMealModal({ onAdd, onClose, date }) {
           <div className="w-12 h-1 bg-border rounded-full mx-auto mb-4" />
 
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-title text-2xl text-text">Aggiungi Pasto</h2>
+            <div>
+              <h2 className="font-title text-2xl text-text">Aggiungi Pasto</h2>
+              <p className={`text-xs mt-0.5 capitalize ${date === getToday() ? 'text-accent-green' : 'text-accent-gold'}`}>
+                {date === getToday() ? 'Oggi' : formatDate(date)}
+              </p>
+            </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setShowCamera(true)} className="text-accent-red p-1.5 rounded-lg active:bg-surface2" title="Fotografa il pasto">
                 <Camera size={22} />
