@@ -137,7 +137,6 @@ export default function Food() {
 
       {showModal && (
         <AddMealModal
-          onAdd={addMeal}
           date={selectedDate}
           onClose={() => setShowModal(false)}
         />

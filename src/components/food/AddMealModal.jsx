@@ -3,19 +3,22 @@ import { X, Plus, Camera, Sparkles, RefreshCw } from 'lucide-react'
 import PhotoMealCapture from './PhotoMealCapture'
 import { getCurrentTime, getToday, formatDate } from '../../utils/dateUtils'
 import { parseMealFromText } from '../../services/foodTextParser'
+import { useFoodStore } from '../../stores/foodStore'
 
 const categories = ['colazione', 'pranzo', 'cena', 'spuntino', 'post-workout']
 
-export default function AddMealModal({ onAdd, onClose, date: dateProp }) {
+export default function AddMealModal({ onClose, date: dateProp }) {
   const date = dateProp || getToday()
-  const [category, setCategory]     = useState('pranzo')
-  const [time, setTime]             = useState(getCurrentTime())
+  const addMeal = useFoodStore(state => state.addMeal)
+
+  const [category, setCategory]   = useState('pranzo')
+  const [time, setTime]           = useState(getCurrentTime())
   const [showCamera, setShowCamera] = useState(false)
 
-  const [aiText, setAiText]         = useState('')
-  const [aiLoading, setAiLoading]   = useState(false)
-  const [aiResult, setAiResult]     = useState(null)
-  const [aiError, setAiError]       = useState(null)
+  const [aiText, setAiText]       = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult]   = useState(null)
+  const [aiError, setAiError]     = useState(null)
 
   async function handleAnalyze() {
     if (!aiText.trim()) return
@@ -33,7 +36,7 @@ export default function AddMealModal({ onAdd, onClose, date: dateProp }) {
 
   function handleAdd() {
     if (!aiResult) return
-    onAdd(date, {
+    addMeal(date, {
       id: crypto.randomUUID(), time, category,
       name: aiResult.name, quantity: 1, unit: 'porzione',
       calories: Number(aiResult.calories) || 0,
@@ -45,7 +48,7 @@ export default function AddMealModal({ onAdd, onClose, date: dateProp }) {
   }
 
   function handlePhotoConfirm(meal) {
-    onAdd(date, { id: crypto.randomUUID(), time, category, quantity: 1, unit: 'porzione', ...meal })
+    addMeal(date, { id: crypto.randomUUID(), time, category, quantity: 1, unit: 'porzione', ...meal })
     onClose()
   }
 
